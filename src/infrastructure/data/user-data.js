@@ -1,59 +1,41 @@
-const connection = require('../config/mysql-connection');
+const db = require('../config/db');
 
 class UserData {
   // SELECT
-
   async getUserById(userId) {
-    const [user] = await connection.execute(
-      'SELECT * FROM users WHERE id = ?',
-      [userId],
-      (err) => console.error(err)
+    return await db.selectOne(
+      'SELECT id, user_name, email, password FROM users WHERE id = ? LIMIT 1',
+      [userId]
     );
-
-    return user.length > 0 ? user[0] : false;
   }
 
   async getUserByName(userName) {
-    const [user] = await connection.execute(
-      'SELECT * FROM users WHERE user_name = ?',
-      [userName],
-      (err) => console.error(err)
+    return await db.selectOne(
+      'SELECT id, user_name, email, password FROM users WHERE user_name = ? LIMIT 1',
+      [userName]
     );
-
-    return user.length > 0 ? user[0] : false;
   }
 
   async getUserByEmail(userEmail) {
-    const [user] = await connection.execute(
-      'SELECT * FROM users WHERE email = ?',
-      [userEmail],
-      (err) => console.error(err)
+    return await db.selectOne(
+      'SELECT id, user_name, email, password FROM users WHERE email = ? LIMIT 1',
+      [userEmail]
     );
-
-    return user.length > 0 ? user[0] : false;
   }
 
   async getUserByActivationLink(activationLink) {
     const sql =
       'SELECT u.id, u.is_activation_status ' +
       'FROM users AS u ' +
-      'INNER JOIN activation_links AS a ' +
-      'WHERE u.id = a.user_id ' +
-      'AND a.link = ?';
+      'INNER JOIN activation_links AS a ON u.id = a.user_id ' +
+      'WHERE a.link = ? ' +
+      'LIMIT 1';
 
-    const [user] = await connection.execute(sql, [activationLink], (err) =>
-      console.error(err)
-    );
-
-    return user.length > 0 ? user[0] : false;
+    return await db.selectOne(sql, [activationLink]);
   }
 
   async getAllUsers() {
-    const [users] = await connection.execute('SELECT * FROM users', [], (err) =>
-      console.error(err)
-    );
-
-    return users.length > 0 ? users : false;
+    return await db.selectMany('SELECT * FROM users');
   }
 
   async getUserRoles(userId) {
@@ -64,51 +46,35 @@ class UserData {
       'WHERE u.site_role_id = s.id ' +
       'AND u.user_id = ?';
 
-    const [roles] = await connection.execute(sql, [userId], (err) =>
-      console.error(err)
-    );
-
-    return roles.length > 0 ? roles : false;
+    return await db.selectMany(sql, [userId]);
   }
 
   // INSERT
-
   async createUser(userData) {
-    const [user] = await connection.execute(
+    const user = await db.exec(
       'INSERT INTO users (user_name, email, birth_date, password) VALUES (?, ?, ?, ?)',
-      [
-        userData.userName,
-        userData.email,
-        userData.birthDate,
-        userData.password
-      ],
-      (err) => console.error(err)
+      [userData.userName, userData.email, userData.birthDate, userData.password]
     );
 
-    await connection.execute(
-      'INSERT INTO user_roles (user_id) VALUE (LAST_INSERT_ID())',
-      [],
-      (err) => console.error(err)
-    );
+    const userId = user.insertId;
+
+    await db.exec('INSERT INTO user_roles (user_id) VALUES (?)', [userId]);
 
     return user;
   }
 
   async createUserActivationLink(userId, activationLink) {
-    await connection.execute(
+    return await db.exec(
       'INSERT INTO activation_links (user_id, link) VALUES (?, ?)',
-      [userId, activationLink],
-      (err) => console.error(err)
+      [userId, activationLink]
     );
   }
 
   // UPDATE
-
   async updateUserPassword(userID, password) {
-    await connection.execute(
+    return await db.execAffected(
       'UPDATE users SET password = ? WHERE users.id = ?',
-      [password, userID],
-      (err) => console.error(err)
+      [password, userID]
     );
   }
 
@@ -120,9 +86,7 @@ class UserData {
       'WHERE users.id = ? ' +
       'AND activation_links.user_id = ?';
 
-    await connection.execute(sql, [1, userId, userId], (err) =>
-      console.error(err)
-    );
+    return await db.execAffected(sql, [1, userId, userId]);
   }
 }
 
