@@ -1,13 +1,11 @@
 {
-  "name": "minecraft",
+  "name": "wildhunt-server-personal-cabinet",
   "version": "1.0.0",
   "description": "Back-end side",
   "main": "src/api/v1/index.js",
   "scripts": {
-    "serve": "cross-env NODE_ENV=development npm run watch-node",
-    "build": "rm -rf dist && webpack --mode production",
-    "start": "cross-env NODE_ENV=production node dist/index.js",
-    "watch-node": "nodemon",
+    "serve": "cross-env NODE_ENV=development nodemon src/api/v1/index.js",
+    "start": "cross-env NODE_ENV=production node src/api/v1/index.js",
     "eslint": "eslint --fix './**/*.js'",
     "prettier": "prettier --write './**/*.js'",
     "prepare": "husky install"
@@ -18,14 +16,10 @@
       "prettier --write"
     ]
   },
-  "browserslist": [
-    "> 0.25%",
-    "last 2 versions",
-    "not dead",
-    "not op_mini all"
-  ],
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "@types/cors": "^2.8.12",
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
@@ -35,7 +29,7 @@
     "helmet": "^4.6.0",
     "joi": "^17.4.2",
     "jsonwebtoken": "^8.5.1",
-    "mysql2": "^2.3.3-rc.0",
+    "mysql2": "^2.3.3",
     "newrelic": "^8.6.0",
     "nodemailer": "^6.7.0",
     "uuid": "^8.3.2"
@@ -49,7 +43,7 @@
     "eslint": "^8.2.0",
     "husky": "^7.0.4",
     "lint-staged": "^11.2.6",
-    "nodemon": "^2.0.15",
+    "nodemon": "^2.0.22",
     "prettier": "^2.4.1"
   }
 }
