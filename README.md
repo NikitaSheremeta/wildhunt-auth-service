@@ -1,25 +1,104 @@
-# Wildhunt authorization service
+### Архитектура и границы
+- Функциональные слои
+  - Привести наименования к единому стилю: сейчас есть `queries`, `services`, `utils`. Чётко разделить: `api` (роуты/валидации/контроллеры) → `services` (бизнес-логика) → `data` (SQL/репозитории).
+  - Вынести общие SQL-хелперы в один модуль (у вас уже есть `sql-execute-utils` — хорошо), использовать везде его.
+- Горизонтальное масштабирование
+  - В контейнерах не использовать `cluster` (1 процесс на контейнер). Оставить кластеризацию за фиче-флагом: включать только в bare-metal/PM2-сценариях.
 
-### Project setup
+### Конфигурация и окружения
+- .env-стратегия
+  - Единственный источник правды — env-файлы: `.env.local` (dev), `.env` (prod).
+  - В `index.js` уже грузите `.env.${NODE_ENV}` при наличии — отлично. Не дублировать `NODE_ENV` в Dockerfile/compose/scripts.
+- Docker/Compose
+  - Dockerfile: без `ENV NODE_ENV`, один CMD `node src/api/v1/index.js`.
+  - Compose: одинаковая команда для dev/prod, различия — только `env_file` и volumes (dev).
+  - Порты: либо фиксированно `"5000:5000"`, либо использовать корневой `.env` (compose) с `COMPOSE_PORT` для подстановки в `ports`.
 
-```
-npm install
-```
+### Безопасность
+- Токены
+  - Хранить в БД хэши refresh/reset-токенов (например, SHA-256 от токена), а не «как есть».
+  - Рекурсивная ротация refresh-токена при рефреше; инвалидировать старый.
+  - Поддержка мульти-девайсов: убрать `UNIQUE(user_id)` у refresh/reset (если хотите авторизацию с нескольких устройств).
+- JWT и cookie
+  - Если токены кладёте в куки: `httpOnly`, `secure`, `sameSite=strict|lax`, `domain` и `path`.
+  - Добавить ротацию секретов и процедуру key rollover.
+- CORS/Helmet
+  - CORS — белый список источников (из .env), запрет `credentials` по умолчанию.
+  - Helmet — добавить CSP (миграция с отчётами), HSTS в проде.
+- Rate limiting/Bruteforce
+  - Ограничить `/auth/login`, `/auth/forgot`, `/auth/reset` (например, `express-rate-limit` + Redis).
+- Секреты в коде
+  - В `newrelic.js` уже перевели на `process.env` — хорошо. По возможности держать `NEW_RELIC_APP_NAME`, `NEW_RELIC_LOG` тоже в env.
 
-### Compiles and hot-reloads for development
+### Надёжность и данные
+- Транзакционность регистрации
+  - Сейчас письмо отправляется до вставки пользователя. Возможна рассинхронизация (письмо ушло, пользователь не создался). Лучше:
+    - транзакция: создать пользователя → создать activation → коммит → отправка письма (или outbox-паттерн).
+- Ограничения и индексы в БД
+  - Убедиться в наличии индексов: `users(email)`, `users(user_name)`, `activation_links(user_id)`, `user_roles(user_id, site_role_id)`, `refresh_tokens(user_id)`, `reset_tokens(user_id)`.
+  - Уникальные ключи: `users.email`, `users.user_name`, `activation_links.link`, `refresh_tokens.token`, `reset_tokens.token`.
+- Миграции
+  - Добавить миграции (Knex/Prisma/Umzug). Хранить схему и данные-«посевы» (вставка роли USER с id=1).
+- Даты/таймзона
+  - Явно задать таймзону БД/приложения. Везде хранить UTC, форматировать на клиенте.
 
-```
-npm run serve
-```
+### Качество кода
+- Валидация входных данных
+  - Joi уже используется — распространить на все входные точки. Возвращать структурированные ошибки (код/ключ/поле).
+- Обработка ошибок
+  - Централизованный мидлвар уже есть. Добавить нормализованные коды/метки (для аналитики) и correlation-id (прокидывать через заголовок).
+- Логи
+  - Структурированные логи (pino/winston) + request-id в контексте, вывод в stdout (для Docker/NR).
+- Стиль
+  - ESLint/Prettier в CI: `eslint . --max-warnings=0`, `prettier --check .`. В pre-commit через Husky/lint-staged — оставить, выровнять версии (см. ниже).
 
-### Build app
+### Тестирование
+- Покрыть ключевые сценарии:
+  - Юнит: `token-service`, `auth-service` (включая ротацию, сроки, ошибки).
+  - Интеграция: эндпоинты `/auth/*` с тестовой БД (Testcontainers).
+  - Контрактные тесты шаблонов писем (снэпшоты).
+- Тестовая конфигурация `.env.test`, отдельное подключение к БД.
 
-```
-npm run build
-```
+### Производительность
+- Соединение с MySQL
+  - Настроить пул: размеры, таймауты, `waitForConnections`, `queueLimit`. Следить за утечками (везде `await`).
+- Индексация (см. выше).
+- Кэширование
+  - Часто используемые справочники (роли) можно кешировать в памяти/Redis.
 
-### Start the server in production mode
+### DevOps/CI
+- CI (GitHub Actions/GitLab CI):
+  - Ступени: lint → test → build → scan → push image → deploy.
+  - Сборка Docker-образа одна для dev/prod; env — только на рантайме.
+- Healthchecks
+  - Readiness `/healthz` (БД доступна), Liveness `/livez` (просто ответ 200). Добавить в compose.
 
-```
-npm run start
-```
+### Почта
+- SMTP
+  - Поддержать 465/587 (secure/STARTTLS) через конфиг; явная валидация источника шаблонов; escape переменных.
+- Retry/Dead letter
+  - На отправку — retry c backoff; логировать неудачные попытки; по возможности использовать очередь.
+
+### Хуки/Инструменты разработчика
+- Husky/lint-staged
+  - Проблема: `npx --no-install lint-staged` падает без локальной установки. Варианты:
+    - Установить `lint-staged@^16.1.6` в devDependencies и оставить `--no-install`.
+    - Или убрать `--no-install`, чтобы `npx` подтягивал пакет сам (медленнее).
+  - В CI запускать linters независимо от хуков (хуки — лишь локальная страховка).
+
+### Конкретные правки (кратко)
+- Dockerfile: без `ENV NODE_ENV`, один `CMD` — уже ок.
+- docker-compose:
+  - dev `serve`: `env_file: .env.local`, `command: nodemon src/api/v1/index.js`, `volumes` подключены.
+  - prod `start`: `env_file: .env`, `command: node src/api/v1/index.js`, уникальное `container_name`.
+  - Порты: либо `"5000:5000"`, либо корневой `.env` для compose с `COMPOSE_PORT`.
+- Husky/lint-staged:
+  - Обновить `lint-staged` до ^16.1.6 и/или убрать `--no-install` в `.husky/pre-commit`.
+- Регистрация/почта:
+  - Изменить порядок: транзакция создания пользователя → коммит → отправка письма (или outbox).
+- Токены:
+  - Хранить хэши, добавить ротацию refresh на `/refresh`, решить стратегию мульти-девайсов.
+- CORS/Helmet:
+  - Белый список доменов и CSP.
+- Индексы/миграции:
+  - Ввести миграции, проверить все индексы/уники.
