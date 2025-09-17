@@ -23,7 +23,7 @@ class StatusCodesUtils {
       },
       FORBIDDEN: {
         code: 403,
-        message: 'Forbidden'
+        message: 'FORBIDDEN'
       },
       INTERNAL_SERVER_ERROR: {
         code: 500,
