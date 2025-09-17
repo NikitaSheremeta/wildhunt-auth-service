@@ -1,23 +1,23 @@
-const db = require('../config/db');
+const sqlExecute = require('../utils/sql-execute-utils');
 
 class UserData {
   // SELECT
   async getUserById(userId) {
-    return await db.selectOne(
+    return await sqlExecute.selectOne(
       'SELECT id, user_name, email, password FROM users WHERE id = ? LIMIT 1',
       [userId]
     );
   }
 
   async getUserByName(userName) {
-    return await db.selectOne(
+    return await sqlExecute.selectOne(
       'SELECT id, user_name, email, password FROM users WHERE user_name = ? LIMIT 1',
       [userName]
     );
   }
 
   async getUserByEmail(userEmail) {
-    return await db.selectOne(
+    return await sqlExecute.selectOne(
       'SELECT id, user_name, email, password FROM users WHERE email = ? LIMIT 1',
       [userEmail]
     );
@@ -31,11 +31,11 @@ class UserData {
       'WHERE a.link = ? ' +
       'LIMIT 1';
 
-    return await db.selectOne(sql, [activationLink]);
+    return await sqlExecute.selectOne(sql, [activationLink]);
   }
 
   async getAllUsers() {
-    return await db.selectMany('SELECT * FROM users');
+    return await sqlExecute.selectMany('SELECT * FROM users');
   }
 
   async getUserRoles(userId) {
@@ -46,25 +46,27 @@ class UserData {
       'WHERE u.site_role_id = s.id ' +
       'AND u.user_id = ?';
 
-    return await db.selectMany(sql, [userId]);
+    return await sqlExecute.selectMany(sql, [userId]);
   }
 
   // INSERT
   async createUser(userData) {
-    const user = await db.exec(
+    const user = await sqlExecute.exec(
       'INSERT INTO users (user_name, email, birth_date, password) VALUES (?, ?, ?, ?)',
       [userData.userName, userData.email, userData.birthDate, userData.password]
     );
 
     const userId = user.insertId;
 
-    await db.exec('INSERT INTO user_roles (user_id) VALUES (?)', [userId]);
+    await sqlExecute.exec('INSERT INTO user_roles (user_id) VALUES (?)', [
+      userId
+    ]);
 
     return user;
   }
 
   async createUserActivationLink(userId, activationLink) {
-    return await db.exec(
+    return await sqlExecute.exec(
       'INSERT INTO activation_links (user_id, link) VALUES (?, ?)',
       [userId, activationLink]
     );
@@ -72,7 +74,7 @@ class UserData {
 
   // UPDATE
   async updateUserPassword(userID, password) {
-    return await db.execAffected(
+    return await sqlExecute.execAffected(
       'UPDATE users SET password = ? WHERE users.id = ?',
       [password, userID]
     );
@@ -86,7 +88,7 @@ class UserData {
       'WHERE users.id = ? ' +
       'AND activation_links.user_id = ?';
 
-    return await db.execAffected(sql, [1, userId, userId]);
+    return await sqlExecute.execAffected(sql, [1, userId, userId]);
   }
 }
 
