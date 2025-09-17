@@ -1,4 +1,5 @@
 require('newrelic');
+
 const dotenv = require('dotenv');
 const express = require('express');
 const cluster = require('cluster');
@@ -13,9 +14,9 @@ dotenv.config();
 
 const app = express();
 
-const port = 5000;
-const serverPort = process.env.SERVER_PORT || port;
-const oneCpu = 1;
+const ONE_CPU = 1;
+
+const serverPort = process.env.SERVER_PORT;
 
 app.use(helmet());
 app.use(express.json());
@@ -29,7 +30,7 @@ const start = async function startServer() {
   if (cluster.isMaster) {
     const cpusCount = os.cpus().length;
 
-    for (let i = 0; i < cpusCount - oneCpu; i++) {
+    for (let i = 0; i < cpusCount - ONE_CPU; i++) {
       const worker = cluster.fork();
 
       worker.on('exit', () => {

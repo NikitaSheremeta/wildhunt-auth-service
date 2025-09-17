@@ -1,20 +1,27 @@
 version: '3.8'
 
 services:
-  app:
-    container_name: wildhunt-app
+  serve:
+    container_name: wildhunt-auth-service
     build:
       context: .
-      target: dev
     env_file:
-      - .env
-    environment:
-      - SERVER_PORT=${SERVER_PORT:-5000}
-      - NODE_ENV=development
+      - .env.local
     ports:
-      - "${SERVER_PORT:-5000}:5000"
+      - "5000:5000"
     volumes:
       - .:/app
       - /app/node_modules
-    command: npm run serve
+    command: nodemon src/api/v1/index.js
+    restart: unless-stopped
+
+  start:
+    container_name: wildhunt-auth-service-prod
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    command: node src/api/v1/index.js
     restart: unless-stopped
