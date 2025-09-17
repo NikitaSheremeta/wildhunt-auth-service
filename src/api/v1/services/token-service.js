@@ -4,13 +4,16 @@ const dateUtils = require('../utils/date-utils');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const ApiError = require('../exceptions/api-error');
 
+const DURATION_FIFTEEN_MINUTES = '15m';
+const DURATION_THIRTY_DAYS = '30d';
+
 class TokenService {
   generateAuthTokens(payload) {
     const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: '15m'
+      expiresIn: DURATION_FIFTEEN_MINUTES
     });
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: '30d'
+      expiresIn: DURATION_THIRTY_DAYS
     });
 
     return {

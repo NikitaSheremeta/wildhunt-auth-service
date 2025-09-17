@@ -1,20 +1,20 @@
-const userData = require('../../../infrastructure/data/user-data');
-const technicalMessagesUtils = require('../utils/technical-messages-utils');
-const tokenData = require('../../../infrastructure/data/token-data');
+const userQuery = require('../queries/user-query');
 const ApiError = require('../exceptions/api-error');
+const technicalMessagesUtils = require('../utils/technical-messages-utils');
+const uuid = require('uuid');
+const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
 const guardUtils = require('../utils/guard-utils');
-const uuid = require('uuid');
-const mailService = require('./mail-service');
+const tokenQuery = require('../queries/token-query');
 const utils = require('../utils/utils');
 
-const salt = 10;
+const SALT = 10;
 
 class AuthService {
   async userRegistration(userInputData) {
-    const userName = await userData.getUserByName(userInputData.userName);
-    const userEmail = await userData.getUserByEmail(userInputData.email);
+    const userName = await userQuery.getUserByName(userInputData.userName);
+    const userEmail = await userQuery.getUserByEmail(userInputData.email);
 
     if (userName) {
       throw ApiError.badRequest(
@@ -38,11 +38,11 @@ class AuthService {
       `${process.env.API_URL}/api/v1/auth/activate/${activationLink}`
     );
 
-    userInputData.password = await bcrypt.hash(userInputData.password, salt);
+    userInputData.password = await bcrypt.hash(userInputData.password, SALT);
 
-    const user = await userData.createUser(userInputData);
+    const user = await userQuery.createUser(userInputData);
 
-    await userData.createUserActivationLink(user.insertId, activationLink);
+    await userQuery.createUserActivationLink(user.insertId, activationLink);
 
     return await tokenService.generateAndSaveRefreshTokens({
       id: user.insertId,
@@ -55,9 +55,9 @@ class AuthService {
     let user;
 
     if (login.indexOf('@') > -1) {
-      user = await userData.getUserByEmail(login);
+      user = await userQuery.getUserByEmail(login);
     } else {
-      user = await userData.getUserByName(login);
+      user = await userQuery.getUserByName(login);
     }
 
     if (!user) {
@@ -74,7 +74,7 @@ class AuthService {
       );
     }
 
-    const roles = await userData.getUserRoles(user.id);
+    const roles = await userQuery.getUserRoles(user.id);
 
     if (!roles) {
       throw ApiError.badRequest(
@@ -96,11 +96,11 @@ class AuthService {
       );
     }
 
-    await tokenData.deleteRefreshToken(refreshToken);
+    await tokenQuery.deleteRefreshToken(refreshToken);
   }
 
   async userActivation(activationLink) {
-    const user = await userData.getUserByActivationLink(activationLink);
+    const user = await userQuery.getUserByActivationLink(activationLink);
 
     if (!user) {
       throw ApiError.badRequest(
@@ -112,11 +112,11 @@ class AuthService {
       return false;
     }
 
-    await userData.updateUserActivationStatus(user.id);
+    await userQuery.updateUserActivationStatus(user.id);
   }
 
   async userForgotPassword(email) {
-    const user = await userData.getUserByEmail(email);
+    const user = await userQuery.getUserByEmail(email);
 
     if (!user) {
       throw ApiError.badRequest(
@@ -148,7 +148,7 @@ class AuthService {
       );
     }
 
-    const user = await userData.getUserById(mailToken.id);
+    const user = await userQuery.getUserById(mailToken.id);
 
     if (!user) {
       throw ApiError.badRequest(
@@ -158,11 +158,11 @@ class AuthService {
 
     const newPassword = utils.generatePassword();
 
-    const newHashPassword = await bcrypt.hash(newPassword, salt);
+    const newHashPassword = await bcrypt.hash(newPassword, SALT);
 
-    await userData.updateUserPassword(mailToken.id, newHashPassword);
+    await userQuery.updateUserPassword(mailToken.id, newHashPassword);
     await mailService.sendNewPasswordMail(user.email, newPassword);
-    await tokenData.deleteResetToken(resetToken);
+    await tokenQuery.deleteResetToken(resetToken);
   }
 
   async userRefreshToken(refreshToken) {
@@ -171,13 +171,13 @@ class AuthService {
     }
 
     const cookieToken = tokenService.validateRefreshToken(refreshToken);
-    const dbToken = await tokenData.getRefreshTokenByUserId(cookieToken.id);
+    const dbToken = await tokenQuery.getRefreshTokenByUserId(cookieToken.id);
 
     if (!cookieToken || !dbToken) {
       throw ApiError.unauthorizedError();
     }
 
-    const user = await userData.getUserById(dbToken.user_id);
+    const user = await userQuery.getUserById(dbToken.user_id);
 
     if (!user) {
       throw ApiError.badRequest(
@@ -185,7 +185,7 @@ class AuthService {
       );
     }
 
-    const roles = await userData.getUserRoles(dbToken.user_id);
+    const roles = await userQuery.getUserRoles(dbToken.user_id);
 
     if (!roles) {
       throw ApiError.badRequest(
