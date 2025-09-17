@@ -9,12 +9,8 @@
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "watch-node": "nodemon",
     "eslint": "eslint --fix './**/*.js'",
-    "prettier": "prettier --write './**/*.js'"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged --relative"
-    }
+    "prettier": "prettier --write './**/*.js'",
+    "prepare": "husky install"
   },
   "lint-staged": {
     "*.js": [
