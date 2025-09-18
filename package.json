@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/api/v1/index.js",
   "scripts": {
-    "serve": "nodemon src/api/v1/index.js",
+    "serve": "DOTENV_CONFIG_PATH=./.env nodemon -r dotenv/config src/api/v1/index.js",
     "eslint": "eslint --fix './**/*.js'",
     "prettier": "prettier --write './**/*.js'",
     "prepare": "husky install"

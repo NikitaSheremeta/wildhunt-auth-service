@@ -26,4 +26,4 @@ class sqlExecute {
   }
 }
 
-module.exports = sqlExecute;
+module.exports = new sqlExecute();

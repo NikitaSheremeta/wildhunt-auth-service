@@ -52,8 +52,8 @@ class UserData {
   // INSERT
   async createUser(userData) {
     const user = await sqlExecute.exec(
-      'INSERT INTO users (user_name, email, birth_date, password) VALUES (?, ?, ?, ?)',
-      [userData.userName, userData.email, userData.birthDate, userData.password]
+      'INSERT INTO users (user_name, email, password) VALUES (?, ?, ?)',
+      [userData.userName, userData.email, userData.password]
     );
 
     const userId = user.insertId;
