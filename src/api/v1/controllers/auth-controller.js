@@ -12,8 +12,6 @@ const cookieConfig = {
 class AuthController {
   async registration(req, res, next) {
     try {
-      console.log('1');
-
       const userData = await authService.userRegistration(req.body);
 
       res.cookie('refreshToken', userData.refreshToken, cookieConfig);

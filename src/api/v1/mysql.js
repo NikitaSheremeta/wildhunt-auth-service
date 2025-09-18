@@ -15,7 +15,7 @@ pool.getConnection((err, connection) => {
     console.error(
       'MySQL connection error:',
       err.code,
-      err.message || err.sqlMessage
+      err.message
     );
 
     return;
@@ -26,7 +26,7 @@ pool.getConnection((err, connection) => {
       console.error(
         'MySQL ping error:',
         pingErr.code,
-        pingErr.message || pingErr.sqlMessage
+        pingErr.message
       );
     }
 
