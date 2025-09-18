@@ -1,5 +1,3 @@
-require('newrelic');
-
 const dotenv = require('dotenv');
 const express = require('express');
 const cluster = require('cluster');
@@ -12,11 +10,11 @@ const errorMiddleware = require('./middlewares/error-middleware');
 
 dotenv.config();
 
-const app = express();
-
+const NODE_ENV = process.env.NODE_ENV;
 const ONE_CPU = 1;
+const SERVER_PORT = process.env.SERVER_PORT;
 
-const serverPort = process.env.SERVER_PORT;
+const app = express();
 
 app.use(helmet());
 app.use(express.json());
@@ -27,7 +25,7 @@ app.use('/static', express.static(__dirname + '/templates/assets/img'));
 app.use(errorMiddleware);
 
 const start = async function startServer() {
-  if (cluster.isMaster) {
+  if (NODE_ENV === 'production' && (cluster.isPrimary || cluster.isMaster)) {
     const cpusCount = os.cpus().length;
 
     for (let i = 0; i < cpusCount - ONE_CPU; i++) {
@@ -40,8 +38,8 @@ const start = async function startServer() {
       });
     }
   } else {
-    app.listen(serverPort, () =>
-      console.log(`Server started on port: ${serverPort}, Pid: ${process.pid}`)
+    app.listen(SERVER_PORT, () =>
+      console.log(`Server started on port: ${SERVER_PORT}, Pid: ${process.pid}`)
     );
   }
 };

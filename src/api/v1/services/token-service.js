@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
-const tokenData = require('../../../infrastructure/data/token-data');
+const tokenData = require('../queries/token-query');
 const dateUtils = require('../utils/date-utils');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const ApiError = require('../exceptions/api-error');
 
+const FIFTEEN_MINUTES_IN_SECONDS = 900;
 const DURATION_FIFTEEN_MINUTES = '15m';
 const DURATION_THIRTY_DAYS = '30d';
 
@@ -66,15 +67,13 @@ class TokenService {
     const resetTokenData = await tokenData.getResetTokenByUserId(userId);
 
     if (resetTokenData) {
-      const fifteenMinutes = 900;
-
       const resetDate = dateUtils.convertIsoToMilliseconds(
         resetTokenData.reset_date
       );
 
       const isDifference = dateUtils.getDifferenceInTime(
         resetDate,
-        fifteenMinutes
+        FIFTEEN_MINUTES_IN_SECONDS
       );
 
       if (isDifference) {

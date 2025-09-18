@@ -1,4 +1,4 @@
-const userData = require('../../../infrastructure/data/user-data');
+const userData = require('../queries/user-query');
 
 class UserController {
   async getUsers(req, res, next) {

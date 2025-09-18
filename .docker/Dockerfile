@@ -10,6 +10,8 @@ COPY . .
 
 EXPOSE 5000
 
+ENV NODE_ENV=production
+
 USER node
 
 CMD ["node", "src/api/v1/index.js"]

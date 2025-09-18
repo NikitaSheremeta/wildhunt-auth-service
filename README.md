@@ -6,12 +6,7 @@
   - В контейнерах не использовать `cluster` (1 процесс на контейнер). Оставить кластеризацию за фиче-флагом: включать только в bare-metal/PM2-сценариях.
 
 ### Конфигурация и окружения
-- .env-стратегия
-  - Единственный источник правды — env-файлы: `.env.local` (dev), `.env` (prod).
-  - В `index.js` уже грузите `.env.${NODE_ENV}` при наличии — отлично. Не дублировать `NODE_ENV` в Dockerfile/compose/scripts.
 - Docker/Compose
-  - Dockerfile: без `ENV NODE_ENV`, один CMD `node src/api/v1/index.js`.
-  - Compose: одинаковая команда для dev/prod, различия — только `env_file` и volumes (dev).
   - Порты: либо фиксированно `"5000:5000"`, либо использовать корневой `.env` (compose) с `COMPOSE_PORT` для подстановки в `ports`.
 
 ### Безопасность
@@ -87,10 +82,7 @@
   - В CI запускать linters независимо от хуков (хуки — лишь локальная страховка).
 
 ### Конкретные правки (кратко)
-- Dockerfile: без `ENV NODE_ENV`, один `CMD` — уже ок.
 - docker-compose:
-  - dev `serve`: `env_file: .env.local`, `command: nodemon src/api/v1/index.js`, `volumes` подключены.
-  - prod `start`: `env_file: .env`, `command: node src/api/v1/index.js`, уникальное `container_name`.
   - Порты: либо `"5000:5000"`, либо корневой `.env` для compose с `COMPOSE_PORT`.
 - Husky/lint-staged:
   - Обновить `lint-staged` до ^16.1.6 и/или убрать `--no-install` в `.husky/pre-commit`.
