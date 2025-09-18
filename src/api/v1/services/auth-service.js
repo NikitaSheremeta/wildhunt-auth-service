@@ -2,7 +2,7 @@ const userQuery = require('../queries/user-query');
 const ApiError = require('../exceptions/api-error');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const uuid = require('uuid');
-// const mailService = require('./mail-service');
+const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
 const guardUtils = require('../utils/guard-utils');
@@ -13,17 +13,8 @@ const SALT = 10;
 
 class AuthService {
   async userRegistration(userInputData) {
-    console.log('2');
-
     const userName = await userQuery.getUserByName(userInputData.userName);
-
-    console.log('userName', userName);
-
-    console.log('3');
-
     const userEmail = await userQuery.getUserByEmail(userInputData.email);
-
-    console.log('4');
 
     if (userName) {
       throw ApiError.badRequest(
@@ -31,19 +22,13 @@ class AuthService {
       );
     }
 
-    console.log('5');
-
     if (userEmail) {
       throw ApiError.badRequest(
         technicalMessagesUtils.authMessages.EMAIL_IS_ALREADY_REGISTERED
       );
     }
 
-    console.log('6');
-
     const activationLink = uuid.v4();
-
-    console.log('7');
 
     // I guess if the mail obviously doesn't exist,
     // there is no need to create a user.
@@ -57,15 +42,9 @@ class AuthService {
 
     userInputData.password = await bcrypt.hash(userInputData.password, SALT);
 
-    console.log('8');
-
     const user = await userQuery.createUser(userInputData);
 
-    console.log('9');
-
     await userQuery.createUserActivationLink(user.insertId, activationLink);
-
-    console.log('10');
 
     return await tokenService.generateAndSaveRefreshTokens({
       id: user.insertId,

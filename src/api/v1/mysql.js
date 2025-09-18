@@ -12,14 +12,22 @@ const pool = mysql.createPool({
 
 pool.getConnection((err, connection) => {
   if (err) {
-    console.error('MySQL connection error:', err.code, err.message || err.sqlMessage);
-  
+    console.error(
+      'MySQL connection error:',
+      err.code,
+      err.message || err.sqlMessage
+    );
+
     return;
   }
 
   connection.ping((pingErr) => {
     if (pingErr) {
-      console.error('MySQL ping error:', pingErr.code, pingErr.message || pingErr.sqlMessage);
+      console.error(
+        'MySQL ping error:',
+        pingErr.code,
+        pingErr.message || pingErr.sqlMessage
+      );
     }
 
     connection.release();
