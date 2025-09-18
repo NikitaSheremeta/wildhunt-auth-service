@@ -25,7 +25,7 @@ class TokenService {
 
   generateResetToken(payload) {
     return jwt.sign(payload, process.env.JWT_RESET_PASSWORD_SECRET, {
-      expiresIn: '15m'
+      expiresIn: DURATION_FIFTEEN_MINUTES
     });
   }
 
