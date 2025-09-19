@@ -1,11 +1,14 @@
 node_modules
 npm-debug.log
-Dockerfile*
-docker-compose*.yml
 .git
 .gitignore
 .env*
 dist
 coverage
 .DS_Store
+.vscode
+.idea
+
+**/reports
+**/tmp
 

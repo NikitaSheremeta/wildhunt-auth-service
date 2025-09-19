@@ -1,7 +1,8 @@
 {
   "name": "wildhunt-auth-service",
   "version": "1.0.0",
-  "main": "src/api/v1/index.js",
+  "private": true,
+  "main": "dist/src/api/v1/index.cjs",
   "scripts": {
     "build": "rollup -c",
     "start": "node dist/src/api/v1/index.cjs",
