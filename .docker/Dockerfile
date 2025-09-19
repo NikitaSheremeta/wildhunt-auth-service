@@ -8,10 +8,10 @@ RUN npm ci --omit=dev
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 8443
 
 ENV NODE_ENV=production
 
 USER node
 
-CMD ["node", "src/api/v1/index.js"]
+CMD ["npm", "run", "start"]
