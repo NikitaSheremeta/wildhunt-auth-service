@@ -32,7 +32,7 @@ class Utils {
         }
 
         const handlebarsTemplate = Handlebars.compile(content);
-        const template = handlebarsTemplate({...templateData});
+        const template = handlebarsTemplate({ ...templateData });
 
         resolve(template);
       });

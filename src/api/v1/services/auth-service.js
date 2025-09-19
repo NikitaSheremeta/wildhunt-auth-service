@@ -128,6 +128,12 @@ class AuthService {
       id: user.id
     });
 
+    console.log(
+      'resetToken',
+      `${process.env.API_URL || process.env.LOCAL_API_URL}:${
+        process.env.SERVER_PORT
+      }/api/v1/auth/reset/${resetToken}`
+    );
     // await mailService.sendResetMail(
     //   email,
     //   `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`

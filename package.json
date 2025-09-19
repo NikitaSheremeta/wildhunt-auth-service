@@ -6,15 +6,8 @@
     "build": "rollup -c",
     "start": "node dist/src/api/v1/index.cjs",
     "serve": "DOTENV_CONFIG_PATH=./.env nodemon -r dotenv/config src/api/v1/index.js",
-    "eslint": "eslint --fix './**/*.js'",
     "prettier": "prettier --write './**/*.js'",
-    "prepare": "husky install"
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "eslint": "eslint --fix './**/*.js'"
   },
   "engines": {
     "node": ">=18"
@@ -39,8 +32,6 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "eslint": "^8.2.0",
-    "husky": "^7.0.4",
-    "lint-staged": "^11.2.6",
     "nodemon": "^2.0.22",
     "prettier": "^2.4.1",
     "rollup": "^4.51.0",
