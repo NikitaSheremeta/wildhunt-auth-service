@@ -63,5 +63,3 @@ class TokenData {
 }
 
 module.exports = new TokenData();
-
-
