@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const tokenData = require('../queries/token-query');
+const tokenData = require('../data/token-data');
 const dateUtils = require('../utils/date-utils');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const ApiError = require('../exceptions/api-error');
