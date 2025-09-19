@@ -128,10 +128,6 @@ class AuthService {
       id: user.id
     });
 
-    console.log(
-      'resetToken',
-      `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`
-    );
     // await mailService.sendResetMail(
     //   email,
     //   `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`
@@ -165,7 +161,6 @@ class AuthService {
     const newHashPassword = await bcrypt.hash(newPassword, SALT);
 
     await userData.updateUserPassword(mailToken.id, newHashPassword);
-    console.log('newPassword', newPassword);
     // await mailService.sendNewPasswordMail(user.email, newPassword);
     await tokenData.deleteResetToken(resetToken);
   }

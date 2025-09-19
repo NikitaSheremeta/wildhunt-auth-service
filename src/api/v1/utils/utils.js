@@ -32,10 +32,7 @@ class Utils {
         }
 
         const handlebarsTemplate = Handlebars.compile(content);
-        const template = handlebarsTemplate({
-          ...templateData,
-          imagePath: `${process.env.API_URL}/static/`
-        });
+        const template = handlebarsTemplate({...templateData});
 
         resolve(template);
       });

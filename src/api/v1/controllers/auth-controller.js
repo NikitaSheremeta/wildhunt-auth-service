@@ -54,7 +54,7 @@ class AuthController {
     try {
       await authService.userActivation(req.params.link);
 
-      return res.redirect(process.env.API_URL);
+      return res.redirect(process.env.API_URL || process.env.API_URL_LOCAL);
     } catch (err) {
       next(err);
     }
@@ -74,7 +74,7 @@ class AuthController {
     try {
       await authService.userResetPassword(req.params.token);
 
-      return res.redirect(process.env.API_URL);
+      return res.redirect(process.env.API_URL || process.env.API_URL_LOCAL);
     } catch (err) {
       next(err);
     }
