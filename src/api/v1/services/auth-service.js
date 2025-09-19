@@ -2,7 +2,7 @@ const userData = require('../data/user-data');
 const ApiError = require('../exceptions/api-error');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const uuid = require('uuid');
-const mailService = require('./mail-service');
+// const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
 const guardUtils = require('../utils/guard-utils');
@@ -37,8 +37,6 @@ class AuthService {
     //   userInputData.email,
     //   `${process.env.API_URL}/api/v1/auth/activate/${activationLink}`
     // );
-
-    console.log('activationLink', `/api/v1/auth/activate/${activationLink}`);
 
     userInputData.password = await bcrypt.hash(userInputData.password, SALT);
 
@@ -130,10 +128,14 @@ class AuthService {
       id: user.id
     });
 
-    await mailService.sendResetMail(
-      email,
+    console.log(
+      'resetToken',
       `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`
     );
+    // await mailService.sendResetMail(
+    //   email,
+    //   `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`
+    // );
 
     return {
       message:
@@ -163,7 +165,8 @@ class AuthService {
     const newHashPassword = await bcrypt.hash(newPassword, SALT);
 
     await userData.updateUserPassword(mailToken.id, newHashPassword);
-    await mailService.sendNewPasswordMail(user.email, newPassword);
+    console.log('newPassword', newPassword);
+    // await mailService.sendNewPasswordMail(user.email, newPassword);
     await tokenData.deleteResetToken(resetToken);
   }
 
