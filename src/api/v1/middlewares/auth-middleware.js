@@ -25,7 +25,7 @@ module.exports = function (roles) {
       let hasRole = false;
 
       userData.roles.forEach((role) => {
-        if (roles.includes(role)) {
+        if (roles.includes(Number(role))) {
           hasRole = true;
         }
       });
