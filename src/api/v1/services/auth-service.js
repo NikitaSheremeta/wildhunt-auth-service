@@ -2,7 +2,7 @@ const userData = require('../data/user-data');
 const ApiError = require('../exceptions/api-error');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const uuid = require('uuid');
-// const mailService = require('./mail-service');
+const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
 const guardUtils = require('../utils/guard-utils');
@@ -33,10 +33,10 @@ class AuthService {
     // I guess if the mail obviously doesn't exist,
     // there is no need to create a user.
     // That is why sending a letter before creating a user to the database.
-    // await mailService.sendActivationMail(
-    //   userInputData.email,
-    //   `${process.env.API_URL}/api/v1/auth/activate/${activationLink}`
-    // );
+    await mailService.sendActivationMail(
+      userInputData.email,
+      `${process.env.API_URL}/api/v1/auth/activate/${activationLink}`
+    );
 
     userInputData.password = await bcrypt.hash(userInputData.password, SALT);
 
