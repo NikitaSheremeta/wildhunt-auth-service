@@ -75,7 +75,7 @@
 **Примеры `curl`:**
 
 ```bash
-curl -X POST "http://localhost:3000/api/v1/auth/registration" \
+curl -X POST "http://localhost:8443/api/v1/auth/registration" \
   -H "Content-Type: application/json" \
   -d '{
     "userName": "TestUser",
@@ -120,7 +120,7 @@ curl -X POST "http://localhost:3000/api/v1/auth/registration" \
 **Пример `curl`:**
 
 ```bash
-curl -X POST "http://localhost:3000/api/v1/auth/login" \
+curl -X POST "http://localhost:8443/api/v1/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login": "test@example.com",
@@ -153,7 +153,7 @@ curl -X POST "http://localhost:3000/api/v1/auth/login" \
 Если вы до этого сохранили cookie в `cookies.txt`:
 
 ```bash
-curl -X POST "http://localhost:3000/api/v1/auth/logout" \
+curl -X POST "http://localhost:8443/api/v1/auth/logout" \
   -b cookies.txt
 ```
 
@@ -191,7 +191,7 @@ curl -X POST "http://localhost:3000/api/v1/auth/logout" \
 **Пример `curl`:**
 
 ```bash
-curl -X POST "http://localhost:3000/api/v1/auth/forgot-password" \
+curl -X POST "http://localhost:8443/api/v1/auth/forgot-password" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com"
@@ -230,7 +230,7 @@ curl -X POST "http://localhost:3000/api/v1/auth/forgot-password" \
 **Пример `curl`:**
 
 ```bash
-curl -X GET "http://localhost:3000/api/v1/auth/activate/<UUID_LINK>" -v
+curl -X GET "http://localhost:8443/api/v1/auth/activate/<UUID_LINK>" -v
 ```
 
 Флаг `-v` нужен, чтобы увидеть 3xx‑редирект в консоли.
@@ -269,7 +269,7 @@ curl -X GET "http://localhost:3000/api/v1/auth/activate/<UUID_LINK>" -v
 **Пример `curl`:**
 
 ```bash
-curl -X GET "http://localhost:3000/api/v1/auth/reset/<RESET_TOKEN>" -v
+curl -X GET "http://localhost:8443/api/v1/auth/reset/<RESET_TOKEN>" -v
 ```
 
 ### 7. Обновление пары токенов — `GET /api/v1/auth/refresh`
@@ -299,7 +299,7 @@ curl -X GET "http://localhost:3000/api/v1/auth/reset/<RESET_TOKEN>" -v
 **Пример `curl`:**
 
 ```bash
-curl -X GET "http://localhost:3000/api/v1/auth/refresh" \
+curl -X GET "http://localhost:8443/api/v1/auth/refresh" \
   -b cookies.txt \
   -c cookies.txt
 ```
@@ -351,7 +351,7 @@ curl -X GET "http://localhost:3000/api/v1/auth/refresh" \
 **Пример `curl` (нужен действующий access‑токен администратора):**
 
 ```bash
-curl -X GET "http://localhost:3000/api/v1/users/all" \
+curl -X GET "http://localhost:8443/api/v1/users/all" \
   -H "Authorization: Bearer <ACCESS_TOKEN_ADMIN>"
 ```
 
