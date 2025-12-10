@@ -19,12 +19,13 @@ const magicNumbers = {
 };
 
 module.exports = (req, res, next) => {
-  const route = req.url.replace('/', '');
+  const routePath = req.route && req.route.path;
 
   let schema;
+  let dataToValidate;
 
-  switch (route) {
-    case 'registration':
+  switch (routePath) {
+    case '/registration':
       schema = Joi.object().keys({
         userName: Joi.string()
           .min(magicNumbers.userName.minLength)
@@ -40,9 +41,10 @@ module.exports = (req, res, next) => {
           .max(magicNumbers.password.maxLength)
           .required()
       });
+      dataToValidate = req.body;
       break;
 
-    case 'login':
+    case '/login':
       schema = Joi.object().keys({
         login: Joi.string().max(magicNumbers.email.maxLength).required(),
         password: Joi.string()
@@ -51,33 +53,40 @@ module.exports = (req, res, next) => {
           .max(magicNumbers.password.maxLength)
           .required()
       });
+      dataToValidate = req.body;
       break;
 
-    case 'forgot-password':
+    case '/forgot-password':
       schema = Joi.object().keys({
         email: Joi.string()
           .email({ tlds: { allow: false } })
           .max(magicNumbers.email.maxLength)
           .required()
       });
+      dataToValidate = req.body;
       break;
 
-    case '/activate/:link':
+    case '/activate/:code':
       schema = Joi.object().keys({
-        link: Joi.string()
+        code: Joi.string()
           .pattern(/^[0-9]{4}$/)
           .required()
       });
+      dataToValidate = req.params;
       break;
 
     case '/reset/:token':
       schema = Joi.object().keys({
         token: Joi.string().pattern(magicNumbers.jwt.regex).required()
       });
+      dataToValidate = req.params;
       break;
+
+    default:
+      return next();
   }
 
-  const { error } = schema.validate(req.body);
+  const { error } = schema.validate(dataToValidate);
 
   if (error) {
     return next(

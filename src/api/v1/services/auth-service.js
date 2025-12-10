@@ -9,17 +9,6 @@ const tokenData = require('../data/token-data');
 const utils = require('../utils/utils');
 
 const SALT = 10;
-const ACTIVATION_CODE_MIN = 1000;
-const ACTIVATION_CODE_MAX = 9999;
-
-function generateActivationCode() {
-  return String(
-    Math.floor(
-      ACTIVATION_CODE_MIN +
-        Math.random() * (ACTIVATION_CODE_MAX - ACTIVATION_CODE_MIN + 1)
-    )
-  );
-}
 const API_URL =
   process.env.NODE_ENV === 'production'
     ? process.env.API_URL
@@ -42,7 +31,7 @@ class AuthService {
       );
     }
 
-    const activationCode = generateActivationCode();
+    const activationCode = utils.generateActivationCode();
 
     // I guess if the mail obviously doesn't exist,
     // there is no need to create a user.
@@ -53,7 +42,7 @@ class AuthService {
 
     const user = await userData.createUser(userInputData);
 
-    await userData.createUserActivationLink(user.insertId, activationCode);
+    await userData.createUserActivationCode(user.insertId, activationCode);
 
     return await tokenService.generateAndSaveRefreshTokens({
       id: user.insertId,
@@ -111,7 +100,7 @@ class AuthService {
   }
 
   async userActivation(activationCode) {
-    const user = await userData.getUserByActivationLink(activationCode);
+    const user = await userData.getUserByActivationCode(activationCode);
 
     if (!user) {
       throw ApiError.badRequest(

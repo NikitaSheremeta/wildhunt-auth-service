@@ -9,7 +9,7 @@ router.post('/login', authValidation, authController.login);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', authValidation, authController.forgotPassword);
 
-router.get('/activate/:link', authValidation, authController.activate);
+router.get('/activate/:code', authValidation, authController.activate);
 router.get('/reset/:token', authValidation, authController.resetPassword);
 router.get('/refresh', authController.refresh);
 

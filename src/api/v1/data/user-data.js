@@ -23,15 +23,15 @@ class UserData {
     );
   }
 
-  async getUserByActivationLink(activationLink) {
+  async getUserByActivationCode(activationCode) {
     const sql =
       'SELECT u.id, u.is_activation_status ' +
       'FROM users AS u ' +
-      'INNER JOIN activation_links AS a ON u.id = a.user_id ' +
-      'WHERE a.link = ? ' +
+      'INNER JOIN activation_codes AS a ON u.id = a.user_id ' +
+      'WHERE a.code = ? ' +
       'LIMIT 1';
 
-    return await sqlExecute.selectOne(sql, [activationLink]);
+    return await sqlExecute.selectOne(sql, [activationCode]);
   }
 
   async getAllUsers() {
@@ -65,10 +65,10 @@ class UserData {
     return user;
   }
 
-  async createUserActivationLink(userId, activationLink) {
+  async createUserActivationCode(userId, activationCode) {
     return await sqlExecute.exec(
-      'INSERT INTO activation_links (user_id, link) VALUES (?, ?)',
-      [userId, activationLink]
+      'INSERT INTO activation_codes (user_id, code) VALUES (?, ?)',
+      [userId, activationCode]
     );
   }
 
@@ -82,11 +82,11 @@ class UserData {
 
   async updateUserActivationStatus(userId) {
     const sql =
-      'UPDATE users, activation_links ' +
+      'UPDATE users, activation_codes ' +
       'SET users.is_activation_status = ?, ' +
-      'activation_links.activation_date = now() ' +
+      'activation_codes.activation_date = now() ' +
       'WHERE users.id = ? ' +
-      'AND activation_links.user_id = ?';
+      'AND activation_codes.user_id = ?';
 
     return await sqlExecute.execAffected(sql, [1, userId, userId]);
   }

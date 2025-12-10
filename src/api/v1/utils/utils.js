@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const Handlebars = require('handlebars');
 
+const ACTIVATION_CODE_MIN = 1000;
+const ACTIVATION_CODE_MAX = 9999;
+
 class Utils {
   generatePassword() {
     const symbols =
@@ -15,6 +18,15 @@ class Utils {
     }
 
     return password;
+  }
+
+  generateActivationCode() {
+    return String(
+      Math.floor(
+        ACTIVATION_CODE_MIN +
+          Math.random() * (ACTIVATION_CODE_MAX - ACTIVATION_CODE_MIN + 1)
+      )
+    );
   }
 
   async prepareMailTemplate(templateName, templateData) {
