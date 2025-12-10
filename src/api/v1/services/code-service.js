@@ -28,9 +28,9 @@ class CodeService {
     const resetCodeData = await codeData.getResetCodeByUserId(userId);
 
     if (resetCodeData) {
-      if (resetCodeData.reset_date) {
+      if (resetCodeData.created_at) {
         const lastRequestDate = dateUtils.convertIsoToMilliseconds(
-          resetCodeData.reset_date
+          resetCodeData.created_at
         );
 
         const isDifference = dateUtils.getDifferenceInTime(
