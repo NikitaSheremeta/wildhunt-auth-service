@@ -1,45 +1,19 @@
 {
-  "name": "minecraft",
+  "name": "wildhunt-auth-service",
   "version": "1.0.0",
-  "description": "Back-end side",
-  "main": "src/api/v1/index.js",
+  "private": true,
+  "main": "dist/src/api/v1/index.cjs",
   "scripts": {
-    "prepare": "husky install",
-    "start": "cross-env NODE_ENV=production node src/api/v1/index.js",
-    "dev": "cross-env NODE_ENV=development npm run watch-node",
-    "watch-node": "nodemon",
-    "eslint": "eslint --fix './**/*.js'",
-    "prettier": "prettier --write './**/*.js'"
+    "build": "rollup -c",
+    "start": "DOTENV_CONFIG_PATH=./.env node dist/src/api/v1/index.cjs",
+    "serve": "NODE_ENV=development DOTENV_CONFIG_PATH=./.env nodemon -r dotenv/config src/api/v1/index.js",
+    "prettier": "prettier --write './**/*.js'",
+    "eslint": "eslint --fix './**/*.js'"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged --relative"
-    }
+  "engines": {
+    "node": ">=18"
   },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  },
-  "browserslist": [
-    "> 0.25%",
-    "last 2 versions",
-    "not dead",
-    "not op_mini all"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/NikitaSheremeta/minecraft.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/NikitaSheremeta/minecraft/issues"
-  },
-  "homepage": "https://github.com/NikitaSheremeta/minecraft#readme",
   "dependencies": {
-    "@types/cors": "^2.8.12",
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
@@ -49,21 +23,18 @@
     "helmet": "^4.6.0",
     "joi": "^17.4.2",
     "jsonwebtoken": "^8.5.1",
-    "mysql2": "^2.3.3-rc.0",
-    "newrelic": "^8.6.0",
-    "nodemailer": "^6.7.0",
-    "uuid": "^8.3.2"
+    "mysql2": "^2.3.3",
+    "nodemailer": "^6.7.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.16.0",
-    "@babel/core": "^7.16.0",
-    "@babel/node": "^7.16.0",
-    "@babel/preset-env": "^7.16.0",
-    "cross-env": "^7.0.3",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
     "eslint": "^8.2.0",
-    "husky": "^7.0.4",
-    "lint-staged": "^11.2.6",
-    "nodemon": "^2.0.15",
-    "prettier": "^2.4.1"
+    "nodemon": "^2.0.22",
+    "prettier": "^2.4.1",
+    "rollup": "^4.51.0",
+    "rollup-plugin-copy": "^3.5.0"
   }
 }

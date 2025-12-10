@@ -16,10 +16,10 @@ class MailService {
     });
   }
 
-  async sendActivationMail(to, link) {
+  async sendActivationMail(to, code) {
     try {
       const activationTemplate = await utils.prepareMailTemplate('activation', {
-        link
+        code
       });
 
       await this.transporter.sendMail({
@@ -35,9 +35,9 @@ class MailService {
     }
   }
 
-  async sendResetMail(to, link) {
+  async sendResetMail(to, code) {
     try {
-      const resetTemplate = await utils.prepareMailTemplate('reset', { link });
+      const resetTemplate = await utils.prepareMailTemplate('reset', { code });
 
       await this.transporter.sendMail({
         from: process.env.SMTP_USER,
@@ -52,11 +52,10 @@ class MailService {
     }
   }
 
-  async sendNewPasswordMail(to, password) {
+  async sendNewPasswordMail(to) {
     try {
       const newPasswordTemplate = await utils.prepareMailTemplate(
-        'new-password',
-        { password }
+        'new-password'
       );
 
       await this.transporter.sendMail({

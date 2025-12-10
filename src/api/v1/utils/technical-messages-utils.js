@@ -2,22 +2,22 @@ class TechnicalMessagesUtils {
   get apiErrorMessages() {
     return {
       UNAUTHORIZED: 'Пользователь не авторизован',
-      FORBIDDEN: 'Пользователю отказано в доступе к запрашиваемому ресурсу'
+      FORBIDDEN: 'У вас недостаточно прав для выполнения этой операции.'
     };
   }
 
   get authMessages() {
     return {
       NICKNAME_IS_ALREADY_REGISTERED:
-        'Пользователь с таким никнеймом уже зарегистрирован x_x',
+        'Данный никнейм занят другим пользователем x_x',
       EMAIL_IS_ALREADY_REGISTERED:
-        'Пользователь с таким почтовым адресом уже зарегистрирован >_<',
-      USER_IS_NOT_FOUND: 'Пользователь не найден :/',
+        'Аккаунт с данным почтовым адресом уже существует >_<',
+      USER_IS_NOT_FOUND: 'Пользователь с таким именем не найден :/',
       WRONG_LOGIN_OR_PASSWORD: 'Неверный лоин или пароль T_T',
-      ROLES_NOT_FOUND: 'Роли не обнаружены х_X',
-      INVALID_LINK: 'Ссылка Недействительна o_()',
+      ROLES_NOT_FOUND: 'У пользователя отсутствуют назначенные роли х_X',
+      INVALID_LINK: 'Ссылка распалась на пиксели, попробуй получить новую o_()',
       EMAIL_ADDRESS_NOT_FOUND:
-        'Пользователь с таким почтовым адресом не найден -_-',
+        'Пользователь с таким почтовым адресом не найден :(',
       PASSWORD_RECOVERY_INSTRUCTIONS:
         'Инструкция по восстановлению пароля - отправлена на ваш почтовый ящик ^_^',
       LINK_EXPIRED: 'Срок действия ссылки истек x_o',
@@ -28,19 +28,20 @@ class TechnicalMessagesUtils {
 
   get mailMessages() {
     return {
-      ACTIVATION_MAIL_SUBJECT: 'Активация учетной записи Minecraft Wild Hunt',
+      ACTIVATION_MAIL_SUBJECT: 'Активация учетной записи Minecraft WildHunt',
       RESET_MAIL_SUBJECT:
-        'Восстановление пароля учетной записи Minecraft Wild Hunt',
+        'Восстановление пароля учетной записи Minecraft WildHunt',
       NEW_PASSWORD_SUBJECT:
-        'Новый пароль для учетной записи Minecraft Wild Hunt',
+        'Новый пароль для учетной записи Minecraft WildHunt',
       ERROR_SENDING_EMAIL:
-        'Ошибка при отпраке письма, возможно, почтовый ящик не существет :('
+        'Ошибка при отпраке письма, возможно, почтовый ящик не существет'
     };
   }
 
-  get tokenMessages() {
+  get codeMessages() {
     return {
-      TRY_AGAIN_LATER: 'Повторите попытку позже'
+      TRY_AGAIN_LATER:
+        'Операция временно недоступна — попробуйте снова через некоторое время'
     };
   }
 }

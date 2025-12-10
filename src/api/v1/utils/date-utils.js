@@ -5,6 +5,10 @@ const magicNumbers = {
 };
 
 class DateUtils {
+  get magicNumbers() {
+    return magicNumbers;
+  }
+
   convertIsoToTimestamp(isoDate) {
     const dateString = isoDate.toISOString();
 

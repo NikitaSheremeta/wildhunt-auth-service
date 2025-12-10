@@ -9,44 +9,97 @@ const magicNumbers = {
   password: {
     minLength: 8,
     maxLength: 24
+  },
+  email: {
+    maxLength: 255
+  },
+  jwt: {
+    regex: /^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+  },
+  code: {
+    regex: /^[0-9]{4}$/
   }
 };
 
-module.exports = function () {
-  return (req, res, next) => {
-    const route = req.url.replace('/', '');
+module.exports = (req, res, next) => {
+  const routePath = req.route && req.route.path;
 
-    let schema;
+  let schema;
+  let dataToValidate;
 
-    switch (route) {
-      case 'registration':
-        schema = Joi.object().keys({
-          userName: Joi.string()
-            .min(magicNumbers.userName.minLength)
-            .max(magicNumbers.userName.maxLength)
-            .required(),
-          email: Joi.string()
-            .email({ tlds: { allow: false } })
-            .required(),
-          birthDate: Joi.date().required(),
-          password: Joi.string()
-            .alphanum()
-            .min(magicNumbers.password.minLength)
-            .max(magicNumbers.password.maxLength)
-            .required()
-        });
+  switch (routePath) {
+    case '/registration':
+      schema = Joi.object().keys({
+        userName: Joi.string()
+          .min(magicNumbers.userName.minLength)
+          .max(magicNumbers.userName.maxLength)
+          .required(),
+        email: Joi.string()
+          .email({ tlds: { allow: false } })
+          .max(magicNumbers.email.maxLength)
+          .required(),
+        password: Joi.string()
+          .alphanum()
+          .min(magicNumbers.password.minLength)
+          .max(magicNumbers.password.maxLength)
+          .required()
+      });
+      dataToValidate = req.body;
+      break;
 
-        break;
-    }
+    case '/login':
+      schema = Joi.object().keys({
+        login: Joi.string().max(magicNumbers.email.maxLength).required(),
+        password: Joi.string()
+          .alphanum()
+          .min(magicNumbers.password.minLength)
+          .max(magicNumbers.password.maxLength)
+          .required()
+      });
+      dataToValidate = req.body;
+      break;
 
-    const { error } = schema.validate(req.body);
+    case '/forgot-password':
+      schema = Joi.object().keys({
+        email: Joi.string()
+          .email({ tlds: { allow: false } })
+          .max(magicNumbers.email.maxLength)
+          .required()
+      });
+      dataToValidate = req.body;
+      break;
 
-    if (error) {
-      return next(
-        ApiError.badRequest(error.details[0].message, error.details[0].context)
-      );
-    }
+    case '/new-password':
+      schema = Joi.object().keys({
+        password: Joi.string()
+          .alphanum()
+          .min(magicNumbers.password.minLength)
+          .max(magicNumbers.password.maxLength)
+          .required(),
+        code: Joi.string().pattern(magicNumbers.code.regex).required()
+      });
+      dataToValidate = req.body;
+      break;
 
-    next();
-  };
+    case '/activate/:code':
+    case '/reset/:code':
+      schema = Joi.object().keys({
+        code: Joi.string().pattern(magicNumbers.code.regex).required()
+      });
+      dataToValidate = req.params;
+      break;
+
+    default:
+      return next();
+  }
+
+  const { error } = schema.validate(dataToValidate);
+
+  if (error) {
+    return next(
+      ApiError.badRequest(error.details[0].message, error.details[0].context)
+    );
+  }
+
+  next();
 };

@@ -1,11 +1,13 @@
 const authService = require('../services/auth-service');
 const statusCodesUtils = require('../utils/status-codes-utils');
 
+// eslint-disable-next-line no-magic-numbers
+const THIRTY_DAYS_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
+
 const cookieConfig = {
-  // eslint-disable-next-line no-magic-numbers
-  maxAge: 30 * 24 * 60 * 60 * 1000,
+  maxAge: THIRTY_DAYS_IN_MILLISECONDS,
   sameSite: 'strict',
-  httpOnly: true,
+  httpOnly: process.env.NODE_ENV === 'development',
   secure: process.env.NODE_ENV === 'production'
 };
 
@@ -52,9 +54,9 @@ class AuthController {
 
   async activate(req, res, next) {
     try {
-      await authService.userActivation(req.params.link);
+      await authService.userActivation(req.params.code);
 
-      return res.redirect(process.env.API_URL);
+      return res.json(statusCodesUtils.httpStatus.OK.code);
     } catch (err) {
       next(err);
     }
@@ -70,11 +72,23 @@ class AuthController {
     }
   }
 
+  async newPassword(req, res, next) {
+    try {
+      const { password, code } = req.body;
+
+      await authService.userNewPassword(password, code);
+
+      return res.json(statusCodesUtils.httpStatus.OK.code);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async resetPassword(req, res, next) {
     try {
-      await authService.userResetPassword(req.params.token);
+      await authService.userResetPassword(req.params.code);
 
-      return res.redirect(process.env.API_URL);
+      return res.json(statusCodesUtils.httpStatus.OK.code);
     } catch (err) {
       next(err);
     }

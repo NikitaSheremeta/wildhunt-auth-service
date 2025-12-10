@@ -1,15 +1,15 @@
-const userData = require('../../../infrastructure/data/user-data');
-const technicalMessagesUtils = require('../utils/technical-messages-utils');
-const tokenData = require('../../../infrastructure/data/token-data');
+const userData = require('../data/user-data');
 const ApiError = require('../exceptions/api-error');
+const technicalMessagesUtils = require('../utils/technical-messages-utils');
+const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
+const codeService = require('./code-service');
 const guardUtils = require('../utils/guard-utils');
-const uuid = require('uuid');
-const mailService = require('./mail-service');
+const tokenData = require('../data/token-data');
 const utils = require('../utils/utils');
 
-const salt = 10;
+const SALT = 10;
 
 class AuthService {
   async userRegistration(userInputData) {
@@ -28,21 +28,18 @@ class AuthService {
       );
     }
 
-    const activationLink = uuid.v4();
+    const activationCode = utils.generateActivationCode();
 
     // I guess if the mail obviously doesn't exist,
     // there is no need to create a user.
     // That is why sending a letter before creating a user to the database.
-    await mailService.sendActivationMail(
-      userInputData.email,
-      `${process.env.API_URL}/api/v1/auth/activate/${activationLink}`
-    );
+    await mailService.sendActivationMail(userInputData.email, activationCode);
 
-    userInputData.password = await bcrypt.hash(userInputData.password, salt);
+    userInputData.password = await bcrypt.hash(userInputData.password, SALT);
 
     const user = await userData.createUser(userInputData);
 
-    await userData.createUserActivationLink(user.insertId, activationLink);
+    await userData.createUserActivationCode(user.insertId, activationCode);
 
     return await tokenService.generateAndSaveRefreshTokens({
       id: user.insertId,
@@ -99,8 +96,8 @@ class AuthService {
     await tokenData.deleteRefreshToken(refreshToken);
   }
 
-  async userActivation(activationLink) {
-    const user = await userData.getUserByActivationLink(activationLink);
+  async userActivation(activationCode) {
+    const user = await userData.getUserByActivationCode(activationCode);
 
     if (!user) {
       throw ApiError.badRequest(
@@ -109,7 +106,9 @@ class AuthService {
     }
 
     if (user.is_activation_status !== 0) {
-      return false;
+      throw ApiError.badRequest(
+        technicalMessagesUtils.authMessages.LINK_EXPIRED
+      );
     }
 
     await userData.updateUserActivationStatus(user.id);
@@ -124,14 +123,11 @@ class AuthService {
       );
     }
 
-    const resetToken = await tokenService.generateAndSaveResetToken({
+    const resetCode = await codeService.generateAndSaveResetCode({
       id: user.id
     });
 
-    await mailService.sendResetMail(
-      email,
-      `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`
-    );
+    await mailService.sendResetMail(email, resetCode);
 
     return {
       message:
@@ -139,8 +135,8 @@ class AuthService {
     };
   }
 
-  async userResetPassword(resetToken) {
-    const mailToken = tokenService.validateResetToken(resetToken);
+  async userResetPassword(resetCode) {
+    const mailToken = await codeService.validateResetCode(resetCode);
 
     if (!mailToken) {
       throw ApiError.badRequest(
@@ -155,14 +151,30 @@ class AuthService {
         technicalMessagesUtils.authMessages.USER_NOT_FOUND
       );
     }
+  }
 
-    const newPassword = utils.generatePassword();
+  async userNewPassword(password, resetCode) {
+    const resetCodeData = await codeService.validateResetCode(resetCode);
 
-    const newHashPassword = await bcrypt.hash(newPassword, salt);
+    if (!resetCodeData) {
+      throw ApiError.badRequest(
+        technicalMessagesUtils.authMessages.LINK_EXPIRED
+      );
+    }
 
-    await userData.updateUserPassword(mailToken.id, newHashPassword);
-    await mailService.sendNewPasswordMail(user.email, newPassword);
-    await tokenData.deleteResetToken(resetToken);
+    const user = await userData.getUserById(resetCodeData.id);
+
+    if (!user) {
+      throw ApiError.badRequest(
+        technicalMessagesUtils.authMessages.USER_NOT_FOUND
+      );
+    }
+
+    const newHashPassword = await bcrypt.hash(password, SALT);
+
+    await userData.updateUserPassword(resetCodeData.id, newHashPassword);
+    await codeService.deleteResetCode(resetCode);
+    await mailService.sendNewPasswordMail(user.email);
   }
 
   async userRefreshToken(refreshToken) {
