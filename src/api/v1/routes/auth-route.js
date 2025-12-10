@@ -8,6 +8,7 @@ router.post('/registration', authValidation, authController.registration);
 router.post('/login', authValidation, authController.login);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', authValidation, authController.forgotPassword);
+router.post('/new-password', authValidation, authController.newPassword);
 
 router.get('/activate/:code', authValidation, authController.activate);
 router.get('/reset/:code', authValidation, authController.resetPassword);

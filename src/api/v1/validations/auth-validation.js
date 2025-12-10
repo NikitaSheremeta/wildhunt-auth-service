@@ -69,6 +69,18 @@ module.exports = (req, res, next) => {
       dataToValidate = req.body;
       break;
 
+    case '/new-password':
+      schema = Joi.object().keys({
+        password: Joi.string()
+          .alphanum()
+          .min(magicNumbers.password.minLength)
+          .max(magicNumbers.password.maxLength)
+          .required(),
+        code: Joi.string().pattern(magicNumbers.code.regex).required()
+      });
+      dataToValidate = req.body;
+      break;
+
     case '/activate/:code':
     case '/reset/:code':
       schema = Joi.object().keys({

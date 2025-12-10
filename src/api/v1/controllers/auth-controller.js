@@ -72,6 +72,18 @@ class AuthController {
     }
   }
 
+  async newPassword(req, res, next) {
+    try {
+      const { password, code } = req.body;
+
+      await authService.userNewPassword(password, code);
+
+      return res.json(statusCodesUtils.httpStatus.OK.code);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async resetPassword(req, res, next) {
     try {
       await authService.userResetPassword(req.params.code);

@@ -151,14 +151,30 @@ class AuthService {
         technicalMessagesUtils.authMessages.USER_NOT_FOUND
       );
     }
+  }
 
-    const newPassword = utils.generatePassword();
+  async userNewPassword(password, resetCode) {
+    const resetCodeData = await codeService.validateResetCode(resetCode);
 
-    const newHashPassword = await bcrypt.hash(newPassword, SALT);
+    if (!resetCodeData) {
+      throw ApiError.badRequest(
+        technicalMessagesUtils.authMessages.LINK_EXPIRED
+      );
+    }
 
-    await userData.updateUserPassword(mailToken.id, newHashPassword);
-    await mailService.sendNewPasswordMail(user.email, newPassword);
+    const user = await userData.getUserById(resetCodeData.id);
+
+    if (!user) {
+      throw ApiError.badRequest(
+        technicalMessagesUtils.authMessages.USER_NOT_FOUND
+      );
+    }
+
+    const newHashPassword = await bcrypt.hash(password, SALT);
+
+    await userData.updateUserPassword(resetCodeData.id, newHashPassword);
     await codeService.deleteResetCode(resetCode);
+    await mailService.sendNewPasswordMail(user.email);
   }
 
   async userRefreshToken(refreshToken) {

@@ -52,11 +52,10 @@ class MailService {
     }
   }
 
-  async sendNewPasswordMail(to, password) {
+  async sendNewPasswordMail(to) {
     try {
       const newPasswordTemplate = await utils.prepareMailTemplate(
-        'new-password',
-        { password }
+        'new-password'
       );
 
       await this.transporter.sendMail({
