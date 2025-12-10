@@ -109,7 +109,9 @@ class AuthService {
     }
 
     if (user.is_activation_status !== 0) {
-      return false;
+      throw ApiError.badRequest(
+        technicalMessagesUtils.authMessages.LINK_EXPIRED
+      );
     }
 
     await userData.updateUserActivationStatus(user.id);

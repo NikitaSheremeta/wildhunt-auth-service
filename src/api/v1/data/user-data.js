@@ -29,6 +29,7 @@ class UserData {
       'FROM users AS u ' +
       'INNER JOIN activation_codes AS a ON u.id = a.user_id ' +
       'WHERE a.code = ? ' +
+      'AND a.activation_date IS NULL ' +
       'LIMIT 1';
 
     return await sqlExecute.selectOne(sql, [activationCode]);
