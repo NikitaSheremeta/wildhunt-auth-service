@@ -4,6 +4,7 @@ const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const ApiError = require('../exceptions/api-error');
 const utils = require('../utils/utils');
 
+// eslint-disable-next-line no-magic-numbers
 const FIFTEEN_MINUTES_IN_SECONDS = 900;
 
 class CodeService {
@@ -18,19 +19,6 @@ class CodeService {
       return null;
     }
 
-    const resetDate = dateUtils.convertIsoToMilliseconds(
-      resetCodeData.reset_date
-    );
-
-    const isValid = dateUtils.getDifferenceInTime(
-      resetDate,
-      FIFTEEN_MINUTES_IN_SECONDS
-    );
-
-    if (!isValid) {
-      return null;
-    }
-
     return {
       id: resetCodeData.user_id
     };
@@ -40,19 +28,21 @@ class CodeService {
     const resetCodeData = await codeData.getResetCodeByUserId(userId);
 
     if (resetCodeData) {
-      const resetDate = dateUtils.convertIsoToMilliseconds(
-        resetCodeData.reset_date
-      );
-
-      const isDifference = dateUtils.getDifferenceInTime(
-        resetDate,
-        FIFTEEN_MINUTES_IN_SECONDS
-      );
-
-      if (isDifference) {
-        throw ApiError.badRequest(
-          technicalMessagesUtils.codeMessages.TRY_AGAIN_LATER
+      if (resetCodeData.reset_date) {
+        const lastRequestDate = dateUtils.convertIsoToMilliseconds(
+          resetCodeData.reset_date
         );
+
+        const isDifference = dateUtils.getDifferenceInTime(
+          lastRequestDate,
+          FIFTEEN_MINUTES_IN_SECONDS
+        );
+
+        if (isDifference) {
+          throw ApiError.badRequest(
+            technicalMessagesUtils.codeMessages.TRY_AGAIN_LATER
+          );
+        }
       }
 
       return await codeData.updateResetCode(userId, resetCode);

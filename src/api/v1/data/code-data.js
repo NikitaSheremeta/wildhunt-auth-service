@@ -4,14 +4,18 @@ class CodeData {
   // SELECT
   async getResetCodeByUserId(userId) {
     return await sqlExecute.selectOne(
-      'SELECT user_id, code, reset_date FROM reset_codes WHERE user_id = ? LIMIT 1',
+      'SELECT user_id, code, created_at, reset_date FROM reset_codes WHERE user_id = ? LIMIT 1',
       [userId]
     );
   }
 
   async getResetCodeByCode(resetCode) {
     return await sqlExecute.selectOne(
-      'SELECT user_id, code, reset_date FROM reset_codes WHERE code = ? LIMIT 1',
+      'SELECT user_id, code, created_at, reset_date ' +
+        'FROM reset_codes ' +
+        'WHERE code = ? ' +
+        'AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) ' +
+        'LIMIT 1',
       [resetCode]
     );
   }
