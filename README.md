@@ -1,73 +1,289 @@
-### Архитектура и границы
-- Функциональные слои
-- Горизонтальное масштабирование
-  - В контейнерах не использовать `cluster` (1 процесс на контейнер). Оставить кластеризацию за фиче-флагом: включать только в bare-metal/PM2-сценариях.
+### WildHunt Auth Service
 
-### Безопасность
-- Токены
-  - Хранить в БД хэши refresh/reset-токенов (например, SHA-256 от токена), а не «как есть».
-  - Рекурсивная ротация refresh-токена при рефреше; инвалидировать старый.
-  - Поддержка мульти-девайсов: убрать `UNIQUE(user_id)` у refresh/reset (если хотите авторизацию с нескольких устройств).
-- JWT и cookie
-  - Если токены кладёте в куки: `httpOnly`, `secure`, `sameSite=strict|lax`, `domain` и `path`.
-  - Добавить ротацию секретов и процедуру key rollover.
-- CORS/Helmet
-  - CORS — белый список источников (из .env), запрет `credentials` по умолчанию.
-  - Helmet — добавить CSP (миграция с отчётами), HSTS в проде.
-- Rate limiting/Bruteforce
-  - Ограничить `/auth/login`, `/auth/forgot`, `/auth/reset` (например, `express-rate-limit` + Redis).
-- Секреты в коде
-  - В `newrelic.js` уже перевели на `process.env` — хорошо. По возможности держать `NEW_RELIC_APP_NAME`, `NEW_RELIC_LOG` тоже в env.
+Small authentication/authorization service for the Minecraft WildHunt project.  
+Stack: **Node.js 18+**, **Express**, **MySQL**, **JWT**, **Nodemailer**.
 
-### Надёжность и данные
-- Транзакционность регистрации
-  - Сейчас письмо отправляется до вставки пользователя. Возможна рассинхронизация (письмо ушло, пользователь не создался). Лучше:
-    - транзакция: создать пользователя → создать activation → коммит → отправка письма (или outbox-паттерн).
-- Миграции
-  - Добавить миграции (Knex/Prisma/Umzug). Хранить схему и данные-«посевы» (вставка роли USER с id=1).
-- Даты/таймзона
-  - Явно задать таймзону БД/приложения. Везде хранить UTC, форматировать на клиенте.
+---
 
-### Качество кода
-- Валидация входных данных
-- Обработка ошибок
-  - Централизованный мидлвар уже есть. Добавить нормализованные коды/метки (для аналитики) и correlation-id (прокидывать через заголовок).
-- Логи
-  - Структурированные логи (pino/winston) + request-id в контексте, вывод в stdout (для Docker/NR).
-- Стиль
-  - ESLint/Prettier в CI: `eslint . --max-warnings=0`, `prettier --check .`. В pre-commit через Husky/lint-staged — оставить, выровнять версии (см. ниже).
+### Run
 
-### Тестирование
-- Покрыть ключевые сценарии:
-  - Юнит: `token-service`, `auth-service` (включая ротацию, сроки, ошибки).
-  - Интеграция: эндпоинты `/auth/*` с тестовой БД (Testcontainers).
-  - Контрактные тесты шаблонов писем (снэпшоты).
-- Тестовая конфигурация `.env.test`, отдельное подключение к БД.
+- **Install dependencies**
 
-### Производительность
-- Индексация (см. выше).
-- Кэширование
-  - Часто используемые справочники (роли) можно кешировать в памяти/Redis.
+```bash
+npm install
+```
 
-### DevOps/CI
-- CI (GitHub Actions/GitLab CI):
-  - Ступени: lint → test → build → scan → push image → deploy.
-  - Сборка Docker-образа одна для dev/prod; env — только на рантайме.
-- Healthchecks
-  - Readiness `/healthz` (БД доступна), Liveness `/livez` (просто ответ 200). Добавить в compose.
+- **Environment variables (`.env`)**
 
-### Почта
-- SMTP
-  - Поддержать 465/587 (secure/STARTTLS) через конфиг; явная валидация источника шаблонов; escape переменных.
-- Retry/Dead letter
-  - На отправку — retry c backoff; логировать неудачные попытки; по возможности использовать очередь.
+Minimal required set:
 
-### Конкретные правки (кратко)
-- Регистрация/почта:
-  - Изменить порядок: транзакция создания пользователя → коммит → отправка письма (или outbox).
-- Токены:
-  - Хранить хэши, добавить ротацию refresh на `/refresh`, решить стратегию мульти-девайсов.
-- CORS/Helmet:
-  - Белый список доменов и CSP.
-- Индексы/миграции:
-  - Ввести миграции.
+```bash
+SERVER_PORT=3000
+
+DB_HOST=localhost
+DB_USER=wildhunt_user
+DB_PASS=secret
+DB_NAME=wildhunt_auth
+
+JWT_ACCESS_SECRET=access_secret
+JWT_REFRESH_SECRET=refresh_secret
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=465
+SMTP_USER=no-reply@example.com
+SMTP_PASS=smtp_password
+```
+
+- **Development mode**
+
+```bash
+npm run serve
+```
+
+The service is available at `http://localhost:${SERVER_PORT}` and exposes API under `http://localhost:${SERVER_PORT}/api/v1`.
+
+- **Build and production run**
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+
+### Base URL
+
+All routes are available under the prefix:
+
+```text
+/api/v1
+```
+
+All paths below are specified **relative to this prefix**.
+
+---
+
+### `/auth` routes
+
+Base prefix: `/api/v1/auth`
+
+#### 1. Registration
+
+- **Method**: `POST`
+- **Path**: `/api/v1/auth/registration`
+- **Request body** (`application/json`):
+
+```json
+{
+  "userName": "SomeNick",
+  "email": "user@example.com",
+  "password": "Password123"
+}
+```
+
+- **200 Response**:
+  - Body with `accessToken`, `refreshToken`.
+  - `refreshToken` is also set into `refreshToken` cookie.
+
+- **curl example**:
+
+```bash
+curl -X POST "http://localhost:8443/api/v1/auth/registration" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userName": "SomeNick",
+    "email": "user@example.com",
+    "password": "Password123"
+  }' \
+  -c cookies.txt
+```
+
+#### 2. Login
+
+- **Method**: `POST`
+- **Path**: `/api/v1/auth/login`
+- **Request body**:
+
+```json
+{
+  "login": "SomeNick or user@example.com",
+  "password": "Password123"
+}
+```
+
+- **200 Response**:
+  - Body: `accessToken`, `refreshToken`.
+  - `refreshToken` cookie is updated.
+
+- **curl example**:
+
+```bash
+curl -X POST "http://localhost:8443/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "login": "SomeNick",
+    "password": "Password123"
+  }' \
+  -c cookies.txt
+```
+
+#### 3. Logout
+
+- **Method**: `POST`
+- **Path**: `/api/v1/auth/logout`
+- **Request body**: none
+- **Requirements**:
+  - `refreshToken` must be present in cookies.
+
+- **200 Response**:
+  - Numeric `200` in body, `refreshToken` cookie is cleared.
+
+- **curl example**:
+
+```bash
+curl -X POST "http://localhost:8443/api/v1/auth/logout" \
+  -b cookies.txt
+```
+
+#### 4. Forgot password (request reset)
+
+- **Method**: `POST`
+- **Path**: `/api/v1/auth/forgot-password`
+- **Request body**:
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+- **200 Response**:
+  - `{ "message": "<text from PASSWORD_RECOVERY_INSTRUCTIONS>" }`
+
+- **curl example**:
+
+```bash
+curl -X POST "http://localhost:8443/api/v1/auth/forgot-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com"
+  }'
+```
+
+#### 5. Set new password by code
+
+- **Method**: `POST`
+- **Path**: `/api/v1/auth/new-password`
+- **Request body**:
+
+```json
+{
+  "password": "NewPassword123",
+  "code": "1234"
+}
+```
+
+- **200 Response**:
+  - Numeric `200` in body.
+
+- **curl example**:
+
+```bash
+curl -X POST "http://localhost:8443/api/v1/auth/new-password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "password": "NewPassword123",
+    "code": "1234"
+  }'
+```
+
+#### 6. Account activation
+
+- **Method**: `GET`
+- **Path**: `/api/v1/auth/activate/:code`
+- **Path params**:
+  - `code` — four-digit activation code.
+
+- **200 Response**:
+  - Numeric `200` in body.
+
+- **curl example**:
+
+```bash
+curl "http://localhost:8443/api/v1/auth/activate/1234"
+```
+
+#### 7. Follow reset link
+
+- **Method**: `GET`
+- **Path**: `/api/v1/auth/reset/:code`
+- **Path params**:
+  - `code` — reset code.
+
+- **200 Response**:
+  - Numeric `200` in body (after code validation).
+
+- **curl example**:
+
+```bash
+curl "http://localhost:8443/api/v1/auth/reset/1234"
+```
+
+#### 8. Refresh token
+
+- **Method**: `GET`
+- **Path**: `/api/v1/auth/refresh`
+- **Requirements**:
+  - Valid `refreshToken` must be present in cookies.
+
+- **200 Response**:
+  - Body: `accessToken`, `refreshToken`.
+  - `refreshToken` cookie is updated.
+
+- **curl example**:
+
+```bash
+curl "http://localhost:8443/api/v1/auth/refresh" \
+  -b cookies.txt \
+  -c cookies.txt
+```
+
+---
+
+### `/users` routes
+
+Base prefix: `/api/v1/users`
+
+#### 1. Get all users
+
+- **Method**: `GET`
+- **Path**: `/api/v1/users/all`
+- **Authorization**:
+  - Header `Authorization: Bearer <accessToken>`.
+  - Requires `ADMIN` role (see `guard-utils.siteRoles.ADMIN`).
+
+- **200 Response**:
+  - Array of users from `users` table.
+
+- **curl example**:
+
+```bash
+curl "http://localhost:8443/api/v1/users/all" \
+  -H "Authorization: Bearer <accessToken>"
+```
+
+---
+
+### Error format
+
+All errors pass through the global `error-middleware` and usually look like:
+
+```json
+{
+  "message": "Error message",
+  "errors": []
+}
+```
+
+For validation errors (`Joi`) the `errors` field contains context of the field that violated a rule. HTTP status codes come from `status-codes-utils` (e.g. `400`, `401`, `403`, `500`).
