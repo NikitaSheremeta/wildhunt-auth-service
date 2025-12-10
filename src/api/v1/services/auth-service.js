@@ -9,6 +9,7 @@ const guardUtils = require('../utils/guard-utils');
 const tokenData = require('../data/token-data');
 const utils = require('../utils/utils');
 
+const API_URL = process.env.NODE_ENV === 'production' ? process.env.API_URL : process.env.API_URL_LOCAL;
 const SALT = 10;
 
 class AuthService {
@@ -35,7 +36,7 @@ class AuthService {
     // That is why sending a letter before creating a user to the database.
     await mailService.sendActivationMail(
       userInputData.email,
-      `${process.env.API_URL}/api/v1/auth/activate/${activationLink}`
+      `${API_URL}/api/v1/auth/activate/${activationLink}`
     );
 
     userInputData.password = await bcrypt.hash(userInputData.password, SALT);
@@ -130,13 +131,11 @@ class AuthService {
 
     console.log(
       'resetToken',
-      `${process.env.API_URL || process.env.LOCAL_API_URL}:${
-        process.env.SERVER_PORT
-      }/api/v1/auth/reset/${resetToken}`
+      `${API_URL}:${process.env.SERVER_PORT}/api/v1/auth/reset/${resetToken}`
     );
     // await mailService.sendResetMail(
     //   email,
-    //   `${process.env.API_URL}/api/v1/auth/reset/${resetToken}`
+    //   `${API_URL}/api/v1/auth/reset/${resetToken}`
     // );
 
     return {

@@ -1,13 +1,17 @@
 const authService = require('../services/auth-service');
 const statusCodesUtils = require('../utils/status-codes-utils');
 
+const API_URL = process.env.NODE_ENV === 'production' ? process.env.API_URL : process.env.API_URL_LOCAL;
+
 const cookieConfig = {
   // eslint-disable-next-line no-magic-numbers
   maxAge: 30 * 24 * 60 * 60 * 1000,
   sameSite: 'strict',
-  httpOnly: true,
+  httpOnly: process.env.NODE_ENV === 'development',
   secure: process.env.NODE_ENV === 'production'
 };
+
+console.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
 class AuthController {
   async registration(req, res, next) {
@@ -54,7 +58,7 @@ class AuthController {
     try {
       await authService.userActivation(req.params.link);
 
-      return res.redirect(process.env.API_URL || process.env.API_URL_LOCAL);
+      return res.redirect(API_URL);
     } catch (err) {
       next(err);
     }
@@ -74,7 +78,7 @@ class AuthController {
     try {
       await authService.userResetPassword(req.params.token);
 
-      return res.redirect(process.env.API_URL || process.env.API_URL_LOCAL);
+      return res.redirect(API_URL);
     } catch (err) {
       next(err);
     }

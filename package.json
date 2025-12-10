@@ -5,8 +5,8 @@
   "main": "dist/src/api/v1/index.cjs",
   "scripts": {
     "build": "rollup -c",
-    "start": "node dist/src/api/v1/index.cjs",
-    "serve": "DOTENV_CONFIG_PATH=./.env nodemon -r dotenv/config src/api/v1/index.js",
+    "start": "NODE_ENV=production DOTENV_CONFIG_PATH=./.env node dist/src/api/v1/index.cjs",
+    "serve": "NODE_ENV=development DOTENV_CONFIG_PATH=./.env nodemon -r dotenv/config src/api/v1/index.js",
     "prettier": "prettier --write './**/*.js'",
     "eslint": "eslint --fix './**/*.js'"
   },
