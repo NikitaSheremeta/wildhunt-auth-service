@@ -16,10 +16,10 @@ class MailService {
     });
   }
 
-  async sendActivationMail(to, link) {
+  async sendActivationMail(to, code) {
     try {
       const activationTemplate = await utils.prepareMailTemplate('activation', {
-        link
+        code
       });
 
       await this.transporter.sendMail({

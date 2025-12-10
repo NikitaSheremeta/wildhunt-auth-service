@@ -24,8 +24,7 @@
     "joi": "^17.4.2",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.3.3",
-    "nodemailer": "^6.7.0",
-    "uuid": "^8.3.2"
+    "nodemailer": "^6.7.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",

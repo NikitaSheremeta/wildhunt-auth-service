@@ -65,7 +65,7 @@ module.exports = (req, res, next) => {
     case '/activate/:link':
       schema = Joi.object().keys({
         link: Joi.string()
-          .guid({ version: ['uuidv4'] })
+          .pattern(/^[0-9]{4}$/)
           .required()
       });
       break;

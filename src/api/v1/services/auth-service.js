@@ -1,7 +1,6 @@
 const userData = require('../data/user-data');
 const ApiError = require('../exceptions/api-error');
 const technicalMessagesUtils = require('../utils/technical-messages-utils');
-const uuid = require('uuid');
 const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
@@ -9,11 +8,22 @@ const guardUtils = require('../utils/guard-utils');
 const tokenData = require('../data/token-data');
 const utils = require('../utils/utils');
 
+const SALT = 10;
+const ACTIVATION_CODE_MIN = 1000;
+const ACTIVATION_CODE_MAX = 9999;
+
+function generateActivationCode() {
+  return String(
+    Math.floor(
+      ACTIVATION_CODE_MIN +
+        Math.random() * (ACTIVATION_CODE_MAX - ACTIVATION_CODE_MIN + 1)
+    )
+  );
+}
 const API_URL =
   process.env.NODE_ENV === 'production'
     ? process.env.API_URL
-    : process.env.API_URL_LOCAL;
-const SALT = 10;
+    : `${process.env.API_URL_LOCAL}:${process.env.SERVER_PORT}`;
 
 class AuthService {
   async userRegistration(userInputData) {
@@ -32,21 +42,18 @@ class AuthService {
       );
     }
 
-    const activationLink = uuid.v4();
+    const activationCode = generateActivationCode();
 
     // I guess if the mail obviously doesn't exist,
     // there is no need to create a user.
     // That is why sending a letter before creating a user to the database.
-    await mailService.sendActivationMail(
-      userInputData.email,
-      `${API_URL}/api/v1/auth/activate/${activationLink}`
-    );
+    await mailService.sendActivationMail(userInputData.email, activationCode);
 
     userInputData.password = await bcrypt.hash(userInputData.password, SALT);
 
     const user = await userData.createUser(userInputData);
 
-    await userData.createUserActivationLink(user.insertId, activationLink);
+    await userData.createUserActivationLink(user.insertId, activationCode);
 
     return await tokenService.generateAndSaveRefreshTokens({
       id: user.insertId,
@@ -103,8 +110,8 @@ class AuthService {
     await tokenData.deleteRefreshToken(refreshToken);
   }
 
-  async userActivation(activationLink) {
-    const user = await userData.getUserByActivationLink(activationLink);
+  async userActivation(activationCode) {
+    const user = await userData.getUserByActivationLink(activationCode);
 
     if (!user) {
       throw ApiError.badRequest(
