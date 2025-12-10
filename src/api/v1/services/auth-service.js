@@ -12,7 +12,7 @@ const SALT = 10;
 const API_URL =
   process.env.NODE_ENV === 'production'
     ? process.env.API_URL
-    : `${process.env.API_URL_LOCAL}:${process.env.SERVER_PORT}`;
+    : `http://${process.env.API_URL_LOCAL}:${process.env.SERVER_PORT}`;
 
 class AuthService {
   async userRegistration(userInputData) {
