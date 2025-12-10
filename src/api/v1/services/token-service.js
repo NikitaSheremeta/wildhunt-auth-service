@@ -1,10 +1,6 @@
 const jwt = require('jsonwebtoken');
 const tokenData = require('../data/token-data');
-const dateUtils = require('../utils/date-utils');
-const technicalMessagesUtils = require('../utils/technical-messages-utils');
-const ApiError = require('../exceptions/api-error');
 
-const FIFTEEN_MINUTES_IN_SECONDS = 900;
 const DURATION_FIFTEEN_MINUTES = '15m';
 const DURATION_THIRTY_DAYS = '30d';
 
@@ -23,12 +19,6 @@ class TokenService {
     };
   }
 
-  generateResetToken(payload) {
-    return jwt.sign(payload, process.env.JWT_RESET_PASSWORD_SECRET, {
-      expiresIn: DURATION_FIFTEEN_MINUTES
-    });
-  }
-
   validateAccessToken(token) {
     try {
       return jwt.verify(token, process.env.JWT_ACCESS_SECRET);
@@ -45,14 +35,6 @@ class TokenService {
     }
   }
 
-  validateResetToken(token) {
-    try {
-      return jwt.verify(token, process.env.JWT_RESET_PASSWORD_SECRET);
-    } catch (err) {
-      return null;
-    }
-  }
-
   async saveRefreshToken(userId, refreshToken) {
     const token = await tokenData.getRefreshTokenByUserId(userId);
 
@@ -63,45 +45,12 @@ class TokenService {
     await tokenData.createRefreshToken(userId, refreshToken);
   }
 
-  async saveResetToken(userId, resetToken) {
-    const resetTokenData = await tokenData.getResetTokenByUserId(userId);
-
-    if (resetTokenData) {
-      const resetDate = dateUtils.convertIsoToMilliseconds(
-        resetTokenData.reset_date
-      );
-
-      const isDifference = dateUtils.getDifferenceInTime(
-        resetDate,
-        FIFTEEN_MINUTES_IN_SECONDS
-      );
-
-      if (isDifference) {
-        throw ApiError.badRequest(
-          technicalMessagesUtils.tokenMessages.TRY_AGAIN_LATER
-        );
-      }
-
-      return await tokenData.updateResetToken(userId, resetToken);
-    }
-
-    await tokenData.createResetToken(userId, resetToken);
-  }
-
   async generateAndSaveRefreshTokens(userData) {
     const tokens = this.generateAuthTokens(userData);
 
     await this.saveRefreshToken(userData.id, tokens.refreshToken);
 
     return tokens;
-  }
-
-  async generateAndSaveResetToken(userData) {
-    const resetToken = this.generateResetToken(userData);
-
-    await this.saveResetToken(userData.id, resetToken);
-
-    return resetToken;
   }
 }
 

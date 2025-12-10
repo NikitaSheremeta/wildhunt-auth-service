@@ -15,6 +15,9 @@ const magicNumbers = {
   },
   jwt: {
     regex: /^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+  },
+  code: {
+    regex: /^[0-9]{4}$/
   }
 };
 
@@ -67,17 +70,9 @@ module.exports = (req, res, next) => {
       break;
 
     case '/activate/:code':
+    case '/reset/:code':
       schema = Joi.object().keys({
-        code: Joi.string()
-          .pattern(/^[0-9]{4}$/)
-          .required()
-      });
-      dataToValidate = req.params;
-      break;
-
-    case '/reset/:token':
-      schema = Joi.object().keys({
-        token: Joi.string().pattern(magicNumbers.jwt.regex).required()
+        code: Joi.string().pattern(magicNumbers.code.regex).required()
       });
       dataToValidate = req.params;
       break;

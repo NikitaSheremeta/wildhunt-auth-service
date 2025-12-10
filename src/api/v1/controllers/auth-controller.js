@@ -74,7 +74,7 @@ class AuthController {
 
   async resetPassword(req, res, next) {
     try {
-      await authService.userResetPassword(req.params.token);
+      await authService.userResetPassword(req.params.code);
 
       return res.json(statusCodesUtils.httpStatus.OK.code);
     } catch (err) {

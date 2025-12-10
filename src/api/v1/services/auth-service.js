@@ -4,15 +4,12 @@ const technicalMessagesUtils = require('../utils/technical-messages-utils');
 const mailService = require('./mail-service');
 const bcrypt = require('bcrypt');
 const tokenService = require('./token-service');
+const codeService = require('./code-service');
 const guardUtils = require('../utils/guard-utils');
 const tokenData = require('../data/token-data');
 const utils = require('../utils/utils');
 
 const SALT = 10;
-const API_URL =
-  process.env.NODE_ENV === 'production'
-    ? process.env.API_URL
-    : `http://${process.env.API_URL_LOCAL}:${process.env.SERVER_PORT}`;
 
 class AuthService {
   async userRegistration(userInputData) {
@@ -126,18 +123,11 @@ class AuthService {
       );
     }
 
-    const resetToken = await tokenService.generateAndSaveResetToken({
+    const resetCode = await codeService.generateAndSaveResetCode({
       id: user.id
     });
 
-    console.log(
-      'resetToken',
-      `${API_URL}:${process.env.SERVER_PORT}/api/v1/auth/reset/${resetToken}`
-    );
-    // await mailService.sendResetMail(
-    //   email,
-    //   `${API_URL}/api/v1/auth/reset/${resetToken}`
-    // );
+    await mailService.sendResetMail(email, resetCode);
 
     return {
       message:
@@ -145,8 +135,8 @@ class AuthService {
     };
   }
 
-  async userResetPassword(resetToken) {
-    const mailToken = tokenService.validateResetToken(resetToken);
+  async userResetPassword(resetCode) {
+    const mailToken = await codeService.validateResetCode(resetCode);
 
     if (!mailToken) {
       throw ApiError.badRequest(
@@ -167,8 +157,8 @@ class AuthService {
     const newHashPassword = await bcrypt.hash(newPassword, SALT);
 
     await userData.updateUserPassword(mailToken.id, newHashPassword);
-    // await mailService.sendNewPasswordMail(user.email, newPassword);
-    await tokenData.deleteResetToken(resetToken);
+    await mailService.sendNewPasswordMail(user.email, newPassword);
+    await codeService.deleteResetCode(resetCode);
   }
 
   async userRefreshToken(refreshToken) {

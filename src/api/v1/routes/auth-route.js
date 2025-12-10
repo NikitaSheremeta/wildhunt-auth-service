@@ -10,7 +10,7 @@ router.post('/logout', authController.logout);
 router.post('/forgot-password', authValidation, authController.forgotPassword);
 
 router.get('/activate/:code', authValidation, authController.activate);
-router.get('/reset/:token', authValidation, authController.resetPassword);
+router.get('/reset/:code', authValidation, authController.resetPassword);
 router.get('/refresh', authController.refresh);
 
 module.exports = router;

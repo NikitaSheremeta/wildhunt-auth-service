@@ -38,7 +38,7 @@ class TechnicalMessagesUtils {
     };
   }
 
-  get tokenMessages() {
+  get codeMessages() {
     return {
       TRY_AGAIN_LATER:
         'Операция временно недоступна — попробуйте снова через некоторое время'
