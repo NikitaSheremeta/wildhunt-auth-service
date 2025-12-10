@@ -1,7 +1,10 @@
 const authService = require('../services/auth-service');
 const statusCodesUtils = require('../utils/status-codes-utils');
 
-const API_URL = process.env.NODE_ENV === 'production' ? process.env.API_URL : process.env.API_URL_LOCAL;
+const API_URL =
+  process.env.NODE_ENV === 'production'
+    ? process.env.API_URL
+    : process.env.API_URL_LOCAL;
 
 const cookieConfig = {
   // eslint-disable-next-line no-magic-numbers

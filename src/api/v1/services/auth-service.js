@@ -9,7 +9,10 @@ const guardUtils = require('../utils/guard-utils');
 const tokenData = require('../data/token-data');
 const utils = require('../utils/utils');
 
-const API_URL = process.env.NODE_ENV === 'production' ? process.env.API_URL : process.env.API_URL_LOCAL;
+const API_URL =
+  process.env.NODE_ENV === 'production'
+    ? process.env.API_URL
+    : process.env.API_URL_LOCAL;
 const SALT = 10;
 
 class AuthService {
