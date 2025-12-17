@@ -18,7 +18,7 @@ npm install
 Minimal required set:
 
 ```bash
-SERVER_PORT=3000
+SERVER_PORT=8443
 
 DB_HOST=localhost
 DB_USER=wildhunt_user
@@ -30,8 +30,33 @@ JWT_REFRESH_SECRET=refresh_secret
 
 SMTP_HOST=smtp.example.com
 SMTP_PORT=465
+SMTP_SECURE=true
 SMTP_USER=no-reply@example.com
 SMTP_PASS=smtp_password
+```
+
+#### SMTP note (Mail.ru)
+
+If you use **Mail.ru** as SMTP provider and get `EAUTH` / `535 5.7.0 ... Application password is REQUIRED`, it means you must use an **application password**, not your regular account password.
+
+Recommended settings for Mail.ru:
+
+```bash
+SMTP_HOST=smtp.mail.ru
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=your-mailbox@mail.ru
+SMTP_PASS=<mail.ru app password>
+```
+
+Alternative (STARTTLS):
+
+```bash
+SMTP_HOST=smtp.mail.ru
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-mailbox@mail.ru
+SMTP_PASS=<mail.ru app password>
 ```
 
 - **Development mode**

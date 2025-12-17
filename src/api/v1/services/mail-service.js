@@ -29,6 +29,13 @@ class MailService {
         html: activationTemplate
       });
     } catch (err) {
+      console.error('SMTP error (activation mail):', {
+        code: err.code,
+        message: err.message,
+        response: err.response,
+        responseCode: err.responseCode,
+        command: err.command
+      });
       throw ApiError.badRequest(
         technicalMessagesUtils.mailMessages.ERROR_SENDING_EMAIL
       );
@@ -46,6 +53,13 @@ class MailService {
         html: resetTemplate
       });
     } catch (err) {
+      console.error('SMTP error (reset mail):', {
+        code: err.code,
+        message: err.message,
+        response: err.response,
+        responseCode: err.responseCode,
+        command: err.command
+      });
       throw ApiError.badRequest(
         technicalMessagesUtils.mailMessages.ERROR_SENDING_EMAIL
       );
@@ -65,6 +79,13 @@ class MailService {
         html: newPasswordTemplate
       });
     } catch (err) {
+      console.error('SMTP error (new password mail):', {
+        code: err.code,
+        message: err.message,
+        response: err.response,
+        responseCode: err.responseCode,
+        command: err.command
+      });
       throw ApiError.badRequest(
         technicalMessagesUtils.mailMessages.ERROR_SENDING_EMAIL
       );
