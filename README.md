@@ -27,6 +27,9 @@ DB_NAME=wildhunt_auth
 
 JWT_ACCESS_SECRET=access_secret
 JWT_REFRESH_SECRET=refresh_secret
+INTERNAL_AUTH_SHARED_SECRET=internal_shared_secret
+INTERNAL_AUTH_ISSUER=wildhunt-auth-service
+INTERNAL_AUTH_AUDIENCE=wildhunt-launcher
 
 SMTP_HOST=smtp.example.com
 SMTP_PORT=465
@@ -296,6 +299,74 @@ Base prefix: `/api/v1/users`
 ```bash
 curl "http://localhost:8443/api/v1/users/all" \
   -H "Authorization: Bearer <accessToken>"
+```
+
+---
+
+### `/internal/auth` routes
+
+Base prefix: `/api/v1/internal/auth`
+
+#### 1. Access token introspection
+
+- **Method**: `POST`
+- **Path**: `/api/v1/internal/auth/introspect`
+- **Authorization**:
+  - Header `X-Auth-Server-Secret: <internal-shared-secret>`.
+  - This route is intended only for internal services such as Minecraft auto-login integration.
+  - This route does **not** use public Bearer auth middleware.
+- **Request body** (`application/json`):
+
+```json
+{
+  "accessToken": "<jwt>"
+}
+```
+
+- **Required environment variables**:
+  - `INTERNAL_AUTH_SHARED_SECRET`
+  - `INTERNAL_AUTH_ISSUER` (optional, default: `wildhunt-auth-service`)
+  - `INTERNAL_AUTH_AUDIENCE` (optional, default: `wildhunt-launcher`)
+
+- **200 Response**:
+
+```json
+{
+  "active": true,
+  "userId": "1",
+  "sub": "1",
+  "login": "admin",
+  "nickname": "admin",
+  "roles": [112],
+  "exp": 1711111111,
+  "iss": "wildhunt-auth-service",
+  "aud": "wildhunt-launcher"
+}
+```
+
+- **401 Response** for invalid access token:
+
+```json
+{
+  "active": false
+}
+```
+
+- **400 Response**:
+  - Returned when `accessToken` is missing in request body.
+
+- **401 / 403 Response**:
+  - Returned when `X-Auth-Server-Secret` is missing or invalid.
+
+- **curl example**:
+
+```bash
+curl -X POST "http://localhost:8443/api/v1/internal/auth/introspect" \
+  -H "Content-Type: application/json" \
+  -H "X-Auth-Server-Secret: <internal-shared-secret>" \
+  -d '{
+    "accessToken": "<jwt>"
+  }'
 ```
 
 ---
